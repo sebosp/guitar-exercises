@@ -1,0 +1,103 @@
+Step: build-step-credential-initializer:
+
+{"level":"warn","ts":1548354868.6834114,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548354868.6848812,"logger":"fallback-logger","caller":"creds-init/main.go:40","msg":"Credentials initialized."}
+Step: build-step-git-source-0:
+
+{"level":"warn","ts":1548354870.6066315,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548354870.9848607,"logger":"fallback-logger","caller":"git-init/main.go:92","msg":"Successfully cloned \"https://github.com/sebosp/guitar-exercises.git\" @ \"master\" in path \"/workspace\""}
+Step: build-step-jenkins:
+
+Picked up _JAVA_OPTIONS: -Xmx400m
+Started
+Running in Durability level: PERFORMANCE_OPTIMIZED
+  18.347 [id=26]	WARNING	i.f.k.c.i.VersionUsageUtils#alert: The client is using resource type 'customresourcedefinitions' with unstable version 'v1beta1'
+[Pipeline] node
+Running on Jenkins in /tmp/jenkinsTests.tmp/jenkins7649748276194965924test/workspace/job
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withCredentials
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (CI Build and push snapshot)
+Stage "CI Build and push snapshot" skipped due to when conditional
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Release)
+[Pipeline] git
+ > git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/sebosp/guitar-exercises.git # timeout=10
+Fetching upstream changes from https://github.com/sebosp/guitar-exercises.git
+ > git --version # timeout=10
+ > git fetch --tags --progress https://github.com/sebosp/guitar-exercises.git +refs/heads/*:refs/remotes/origin/*
+ > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
+ > git rev-parse refs/remotes/origin/origin/master^{commit} # timeout=10
+Checking out Revision ca1beaaf75912ad3923e50125edd16ac9b7ee50c (refs/remotes/origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f ca1beaaf75912ad3923e50125edd16ac9b7ee50c
+ > git branch -a -v --no-abbrev # timeout=10
+ > git branch -D master # timeout=10
+ > git checkout -b master ca1beaaf75912ad3923e50125edd16ac9b7ee50c
+Commit message: "Draft create"
+First time build. Skipping changelog.
+[Pipeline] sh
++ jx-release-version
++ echo 0.0.1
+[Pipeline] sh
++ cat VERSION
++ jx step tag --version 0.0.1
+Tag v0.0.1 created and pushed to remote origin
+[Pipeline] sh
++ rustup override set nightly
+info: syncing channel updates for 'nightly-x86_64-unknown-linux-gnu'
+info: latest update on 2019-01-24, rust version 1.33.0-nightly (19f8958f8 2019-01-23)
+info: downloading component 'rustc'
+info: downloading component 'rust-std'
+info: downloading component 'cargo'
+info: downloading component 'rust-docs'
+info: installing component 'rustc'
+info: installing component 'rust-std'
+info: installing component 'cargo'
+info: installing component 'rust-docs'
+info: override toolchain for '/tmp/jenkinsTests.tmp/jenkins7649748276194965924test/workspace/job' set to 'nightly-x86_64-unknown-linux-gnu'
+
+  nightly-x86_64-unknown-linux-gnu installed - rustc 1.33.0-nightly (19f8958f8 2019-01-23)
+
+[Pipeline] sh
++ cargo install
+warning: Using `cargo install` to install the binaries for the package in current working directory is deprecated, use `cargo install --path .` instead. Use `cargo build` if you want to simply build the package.
+  Installing guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins7649748276194965924test/workspace/job)
+    Updating crates.io index
+error: failed to compile `guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins7649748276194965924test/workspace/job)`, intermediate artifacts can be found at `/tmp/jenkinsTests.tmp/jenkins7649748276194965924test/workspace/job/target`
+
+Caused by:
+  failed to select a version for the requirement `ring = "^0.11.0"`
+  candidate versions found which didn't match: 0.14.3, 0.14.2, 0.14.1, ...
+  location searched: crates.io index
+required by package `cookie v0.9.1`
+    ... which is depended on by `rocket v0.3.6`
+    ... which is depended on by `guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins7649748276194965924test/workspace/job)`
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Promote to Environments)
+Stage "Promote to Environments" skipped due to earlier failure(s)
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 101
+Finished: FAILURE
