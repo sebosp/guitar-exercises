@@ -1,0 +1,214 @@
+Step: build-step-credential-initializer:
+
+{"level":"warn","ts":1548356181.0020795,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548356181.0027316,"logger":"fallback-logger","caller":"creds-init/main.go:40","msg":"Credentials initialized."}
+Step: build-step-git-source-0:
+
+{"level":"warn","ts":1548356182.1550136,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548356182.7988975,"logger":"fallback-logger","caller":"git-init/main.go:92","msg":"Successfully cloned \"https://github.com/sebosp/guitar-exercises.git\" @ \"6f897c49f8a953cc9ff2f9ee268db3584c361e43\" in path \"/workspace\""}
+Step: build-step-jenkins:
+
+Picked up _JAVA_OPTIONS: -Xmx400m
+Started
+Running in Durability level: PERFORMANCE_OPTIMIZED
+  18.942 [id=32]	WARNING	i.f.k.c.i.VersionUsageUtils#alert: The client is using resource type 'customresourcedefinitions' with unstable version 'v1beta1'
+[Pipeline] node
+Running on Jenkins in /tmp/jenkinsTests.tmp/jenkins6008217037137882387test/workspace/job
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withCredentials
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (CI Build and push snapshot)
+Stage "CI Build and push snapshot" skipped due to when conditional
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Release)
+[Pipeline] git
+ > git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/sebosp/guitar-exercises.git # timeout=10
+Fetching upstream changes from https://github.com/sebosp/guitar-exercises.git
+ > git --version # timeout=10
+ > git fetch --tags --progress https://github.com/sebosp/guitar-exercises.git +refs/heads/*:refs/remotes/origin/*
+ > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
+ > git rev-parse refs/remotes/origin/origin/master^{commit} # timeout=10
+Checking out Revision 6f897c49f8a953cc9ff2f9ee268db3584c361e43 (refs/remotes/origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 6f897c49f8a953cc9ff2f9ee268db3584c361e43
+ > git branch -a -v --no-abbrev # timeout=10
+ > git branch -D master # timeout=10
+ > git checkout -b master 6f897c49f8a953cc9ff2f9ee268db3584c361e43
+Commit message: "Trying Rocket 0.4.0"
+First time build. Skipping changelog.
+[Pipeline] sh
++ jx-release-version
++ echo 0.0.3
+[Pipeline] sh
++ cat VERSION
++ jx step tag --version 0.0.3
+Tag v0.0.3 created and pushed to remote origin
+[Pipeline] sh
++ rustup override set nightly
+info: syncing channel updates for 'nightly-x86_64-unknown-linux-gnu'
+info: latest update on 2019-01-24, rust version 1.33.0-nightly (19f8958f8 2019-01-23)
+info: downloading component 'rustc'
+info: downloading component 'rust-std'
+info: downloading component 'cargo'
+info: downloading component 'rust-docs'
+info: installing component 'rustc'
+info: installing component 'rust-std'
+info: installing component 'cargo'
+info: installing component 'rust-docs'
+info: override toolchain for '/tmp/jenkinsTests.tmp/jenkins6008217037137882387test/workspace/job' set to 'nightly-x86_64-unknown-linux-gnu'
+
+  nightly-x86_64-unknown-linux-gnu installed - rustc 1.33.0-nightly (19f8958f8 2019-01-23)
+
+[Pipeline] sh
++ cargo install
+warning: Using `cargo install` to install the binaries for the package in current working directory is deprecated, use `cargo install --path .` instead. Use `cargo build` if you want to simply build the package.
+  Installing guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins6008217037137882387test/workspace/job)
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded rocket v0.4.0
+  Downloaded rocket_codegen v0.4.0
+  Downloaded toml v0.4.10
+  Downloaded isatty v0.1.9
+  Downloaded pear v0.1.2
+  Downloaded log v0.4.6
+  Downloaded num_cpus v1.9.0
+  Downloaded base64 v0.10.0
+  Downloaded rocket_http v0.4.0
+  Downloaded version_check v0.1.5
+  Downloaded time v0.1.42
+  Downloaded state v0.4.1
+  Downloaded yansi v0.5.0
+  Downloaded quote v0.6.11
+  Downloaded unicode-xid v0.1.0
+  Downloaded cfg-if v0.1.6
+  Downloaded indexmap v1.0.2
+  Downloaded libc v0.2.48
+  Downloaded percent-encoding v1.0.1
+  Downloaded cookie v0.11.0
+  Downloaded serde v1.0.85
+  Downloaded byteorder v1.3.1
+  Downloaded memchr v2.1.3
+  Downloaded devise v0.2.0
+  Downloaded smallvec v0.6.8
+  Downloaded hyper v0.10.15
+  Downloaded pear_codegen v0.1.2
+  Downloaded url v1.7.2
+  Downloaded base64 v0.9.3
+  Downloaded ring v0.13.5
+  Downloaded typeable v0.1.2
+  Downloaded unicase v1.4.2
+  Downloaded yansi v0.4.0
+  Downloaded devise_codegen v0.2.0
+  Downloaded log v0.3.9
+  Downloaded devise_core v0.2.0
+  Downloaded unreachable v1.0.0
+  Downloaded proc-macro2 v0.4.26
+  Downloaded syn v0.15.26
+  Downloaded httparse v1.3.3
+  Downloaded traitobject v0.1.0
+  Downloaded language-tags v0.2.2
+  Downloaded idna v0.1.5
+  Downloaded void v1.0.2
+  Downloaded lazy_static v1.2.0
+  Downloaded safemem v0.3.0
+  Downloaded untrusted v0.6.2
+  Downloaded bitflags v1.0.4
+  Downloaded cc v1.0.28
+  Downloaded mime v0.2.6
+  Downloaded unicode-normalization v0.1.8
+  Downloaded matches v0.1.8
+  Downloaded unicode-bidi v0.3.4
+   Compiling proc-macro2 v0.4.26
+   Compiling void v1.0.2
+   Compiling unicode-xid v0.1.0
+   Compiling byteorder v1.3.1
+   Compiling version_check v0.1.5
+   Compiling yansi v0.4.0
+   Compiling matches v0.1.8
+   Compiling cfg-if v0.1.6
+   Compiling libc v0.2.48
+   Compiling cc v1.0.28
+   Compiling httparse v1.3.3
+   Compiling percent-encoding v1.0.1
+   Compiling bitflags v1.0.4
+   Compiling safemem v0.3.0
+   Compiling untrusted v0.6.2
+   Compiling lazy_static v1.2.0
+   Compiling typeable v0.1.2
+   Compiling yansi v0.5.0
+   Compiling serde v1.0.85
+   Compiling traitobject v0.1.0
+   Compiling language-tags v0.2.2
+   Compiling state v0.4.1
+   Compiling indexmap v1.0.2
+   Compiling memchr v2.1.3
+   Compiling unreachable v1.0.0
+   Compiling unicase v1.4.2
+   Compiling pear_codegen v0.1.2
+   Compiling unicode-bidi v0.3.4
+   Compiling log v0.4.6
+   Compiling ring v0.13.5
+   Compiling rocket_codegen v0.4.0
+   Compiling rocket v0.4.0
+   Compiling smallvec v0.6.8
+   Compiling log v0.3.9
+   Compiling unicode-normalization v0.1.8
+   Compiling base64 v0.9.3
+   Compiling base64 v0.10.0
+   Compiling mime v0.2.6
+   Compiling num_cpus v1.9.0
+   Compiling time v0.1.42
+   Compiling isatty v0.1.9
+   Compiling quote v0.6.11
+   Compiling toml v0.4.10
+   Compiling idna v0.1.5
+   Compiling syn v0.15.26
+   Compiling url v1.7.2
+   Compiling hyper v0.10.15
+   Compiling cookie v0.11.0
+   Compiling devise_core v0.2.0
+   Compiling devise_codegen v0.2.0
+   Compiling pear v0.1.2
+   Compiling rocket_http v0.4.0
+   Compiling devise v0.2.0
+   Compiling guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins6008217037137882387test/workspace/job)
+error: /tmp/jenkinsTests.tmp/jenkins6008217037137882387test/workspace/job/target/release/deps/librocket_codegen-2de7548f9c59b419.so: undefined symbol: __rustc_plugin_registrar_797edcb7e8307747999a2294633adc7c__
+ --> src/main.rs:2:11
+  |
+2 | #![plugin(rocket_codegen)]
+  |           ^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+
+error: failed to compile `guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins6008217037137882387test/workspace/job)`, intermediate artifacts can be found at `/tmp/jenkinsTests.tmp/jenkins6008217037137882387test/workspace/job/target`
+
+Caused by:
+  Could not compile `guitar-exercises`.
+
+To learn more, run the command again with --verbose.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Promote to Environments)
+Stage "Promote to Environments" skipped due to earlier failure(s)
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
