@@ -1,5 +1,5 @@
 [package]
-name = "REPLACE_ME_APP_NAME"
+name = "guitar-exercises"
 version = "0.1.0"
 
 [dependencies]
