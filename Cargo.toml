@@ -3,5 +3,5 @@ name = "guitar-exercises"
 version = "0.1.0"
 
 [dependencies]
-rocket = "0.3.6"
+rocket = "0.4.0"
 rocket_codegen = "0.4.0"
