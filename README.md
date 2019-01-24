@@ -1,2 +1,2 @@
-# rust-http
-A simple hello world Rust app
+# guitar-exercises
+A guitar exercise generator.
