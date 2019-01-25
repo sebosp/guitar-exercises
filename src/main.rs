@@ -1,8 +1,6 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
+#![feature(proc_macro_hygiene, decl_macro)]
 
-
-extern crate rocket;
+#[macro_use] extern crate rocket;
 
 use std::io;
 use std::path::{Path, PathBuf};
@@ -25,4 +23,19 @@ fn rocket() -> rocket::Rocket {
 
 fn main() {
     rocket().launch();
+}
+
+#[cfg(test)]
+mod test {
+    use super::rocket;
+    use rocket::local::Client;
+    use rocket::http::Status;
+
+    #[test]
+    fn test_hello() {
+        let client = Client::new(rocket()).unwrap();
+        let mut response = client.get("/").dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        assert_eq!(response.body_string(), Some("Hello, world!".into()));
+    }
 }
