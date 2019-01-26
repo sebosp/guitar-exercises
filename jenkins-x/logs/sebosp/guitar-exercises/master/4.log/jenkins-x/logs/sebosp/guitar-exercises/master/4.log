@@ -1,0 +1,280 @@
+Step: build-step-credential-initializer:
+
+{"level":"warn","ts":1548491104.9642222,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548491104.965493,"logger":"fallback-logger","caller":"creds-init/main.go:40","msg":"Credentials initialized."}
+Step: build-step-git-source-0:
+
+{"level":"warn","ts":1548491107.2718937,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548491107.7084727,"logger":"fallback-logger","caller":"git-init/main.go:92","msg":"Successfully cloned \"https://github.com/sebosp/guitar-exercises.git\" @ \"9a55e9a50511822b2cf8d1827fc529bbffbb2d34\" in path \"/workspace\""}
+Step: build-step-jenkins:
+
+Picked up _JAVA_OPTIONS: -Xmx400m
+Started
+Running in Durability level: PERFORMANCE_OPTIMIZED
+  18.925 [id=32]	WARNING	i.f.k.c.i.VersionUsageUtils#alert: The client is using resource type 'customresourcedefinitions' with unstable version 'v1beta1'
+[Pipeline] node
+Running on Jenkins in /tmp/jenkinsTests.tmp/jenkins3498543443733174814test/workspace/job
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withCredentials
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (CI Build and push snapshot)
+Stage "CI Build and push snapshot" skipped due to when conditional
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Release)
+[Pipeline] git
+ > git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/sebosp/guitar-exercises.git # timeout=10
+Fetching upstream changes from https://github.com/sebosp/guitar-exercises.git
+ > git --version # timeout=10
+ > git fetch --tags --progress https://github.com/sebosp/guitar-exercises.git +refs/heads/*:refs/remotes/origin/*
+ > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
+ > git rev-parse refs/remotes/origin/origin/master^{commit} # timeout=10
+Checking out Revision 9a55e9a50511822b2cf8d1827fc529bbffbb2d34 (refs/remotes/origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 9a55e9a50511822b2cf8d1827fc529bbffbb2d34
+ > git branch -a -v --no-abbrev # timeout=10
+ > git branch -D master # timeout=10
+ > git checkout -b master 9a55e9a50511822b2cf8d1827fc529bbffbb2d34
+Commit message: "Changed h1 title test"
+First time build. Skipping changelog.
+[Pipeline] sh
++ jx-release-version
++ echo 0.0.4
+[Pipeline] sh
++ cat VERSION
++ jx step tag --version 0.0.4
+Tag v0.0.4 created and pushed to remote origin
+[Pipeline] sh
++ rustup override set nightly
+info: syncing channel updates for 'nightly-x86_64-unknown-linux-gnu'
+info: latest update on 2019-01-26, rust version 1.33.0-nightly (bf669d1e3 2019-01-25)
+info: downloading component 'rustc'
+info: downloading component 'rust-std'
+info: downloading component 'cargo'
+info: downloading component 'rust-docs'
+info: installing component 'rustc'
+info: installing component 'rust-std'
+info: installing component 'cargo'
+info: installing component 'rust-docs'
+info: override toolchain for '/tmp/jenkinsTests.tmp/jenkins3498543443733174814test/workspace/job' set to 'nightly-x86_64-unknown-linux-gnu'
+
+  nightly-x86_64-unknown-linux-gnu installed - rustc 1.33.0-nightly (bf669d1e3 2019-01-25)
+
+[Pipeline] sh
++ cargo install
+warning: Using `cargo install` to install the binaries for the package in current working directory is deprecated, use `cargo install --path .` instead. Use `cargo build` if you want to simply build the package.
+  Installing guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins3498543443733174814test/workspace/job)
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded rocket_codegen v0.4.0
+  Downloaded rocket v0.4.0
+  Downloaded quote v0.6.11
+  Downloaded yansi v0.5.0
+  Downloaded version_check v0.1.5
+  Downloaded devise v0.2.0
+  Downloaded rocket_http v0.4.0
+  Downloaded state v0.4.1
+  Downloaded base64 v0.10.1
+  Downloaded isatty v0.1.9
+  Downloaded proc-macro2 v0.4.26
+  Downloaded pear v0.1.2
+  Downloaded time v0.1.42
+  Downloaded indexmap v1.0.2
+  Downloaded toml v0.4.10
+  Downloaded log v0.4.6
+  Downloaded memchr v2.1.3
+  Downloaded unicode-xid v0.1.0
+  Downloaded pear_codegen v0.1.2
+  Downloaded devise_core v0.2.0
+  Downloaded hyper v0.10.15
+  Downloaded libc v0.2.48
+  Downloaded smallvec v0.6.8
+  Downloaded devise_codegen v0.2.0
+  Downloaded cfg-if v0.1.6
+  Downloaded byteorder v1.3.1
+  Downloaded num_cpus v1.9.0
+  Downloaded percent-encoding v1.0.1
+  Downloaded httparse v1.3.3
+  Downloaded base64 v0.9.3
+  Downloaded unreachable v1.0.0
+  Downloaded bitflags v1.0.4
+  Downloaded typeable v0.1.2
+  Downloaded traitobject v0.1.0
+  Downloaded cookie v0.11.0
+  Downloaded log v0.3.9
+  Downloaded yansi v0.4.0
+  Downloaded language-tags v0.2.2
+  Downloaded serde v1.0.85
+  Downloaded url v1.7.2
+  Downloaded syn v0.15.26
+  Downloaded unicase v1.4.2
+  Downloaded safemem v0.3.0
+  Downloaded void v1.0.2
+  Downloaded matches v0.1.8
+  Downloaded mime v0.2.6
+  Downloaded idna v0.1.5
+  Downloaded unicode-bidi v0.3.4
+  Downloaded unicode-normalization v0.1.8
+  Downloaded ring v0.13.5
+  Downloaded lazy_static v1.2.0
+  Downloaded untrusted v0.6.2
+  Downloaded cc v1.0.28
+   Compiling void v1.0.2
+   Compiling proc-macro2 v0.4.26
+   Compiling unicode-xid v0.1.0
+   Compiling libc v0.2.48
+   Compiling version_check v0.1.5
+   Compiling yansi v0.4.0
+   Compiling byteorder v1.3.1
+   Compiling matches v0.1.8
+   Compiling cc v1.0.28
+   Compiling cfg-if v0.1.6
+   Compiling httparse v1.3.3
+   Compiling percent-encoding v1.0.1
+   Compiling safemem v0.3.0
+   Compiling lazy_static v1.2.0
+   Compiling untrusted v0.6.2
+   Compiling bitflags v1.0.4
+   Compiling yansi v0.5.0
+   Compiling serde v1.0.85
+   Compiling language-tags v0.2.2
+   Compiling typeable v0.1.2
+   Compiling traitobject v0.1.0
+   Compiling memchr v2.1.3
+   Compiling indexmap v1.0.2
+   Compiling state v0.4.1
+   Compiling unreachable v1.0.0
+   Compiling unicase v1.4.2
+   Compiling pear_codegen v0.1.2
+   Compiling unicode-bidi v0.3.4
+   Compiling log v0.4.6
+   Compiling rocket_codegen v0.4.0
+   Compiling rocket v0.4.0
+   Compiling ring v0.13.5
+   Compiling smallvec v0.6.8
+   Compiling log v0.3.9
+   Compiling unicode-normalization v0.1.8
+   Compiling time v0.1.42
+   Compiling num_cpus v1.9.0
+   Compiling isatty v0.1.9
+   Compiling base64 v0.9.3
+   Compiling base64 v0.10.1
+   Compiling mime v0.2.6
+   Compiling quote v0.6.11
+   Compiling idna v0.1.5
+   Compiling toml v0.4.10
+   Compiling syn v0.15.26
+   Compiling url v1.7.2
+   Compiling cookie v0.11.0
+   Compiling hyper v0.10.15
+   Compiling devise_core v0.2.0
+   Compiling devise_codegen v0.2.0
+   Compiling pear v0.1.2
+   Compiling rocket_http v0.4.0
+   Compiling devise v0.2.0
+   Compiling guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins3498543443733174814test/workspace/job)
+    Finished release [optimized] target(s) in 5m 30s
+  Installing /builder/home/.cargo/bin/guitar-exercises
+[Pipeline] sh
++ cp /builder/home/.cargo/bin/guitar-exercises .
+[Pipeline] sh
++ cat VERSION
++ export VERSION=0.0.4
++ skaffold build -f skaffold.yaml
+time="2019-01-26T08:33:36Z" level=warning msg="config version (skaffold/v1beta2) out of date: upgrading to latest (skaffold/v1beta3)"
+Starting build...
+Building [changeme]...
+Sending build context to Docker daemon    532kBSending build context to Docker daemon  6.612MBSending build context to Docker daemon  19.34MBSending build context to Docker daemon  31.52MBSending build context to Docker daemon  43.68MBSending build context to Docker daemon  57.46MBSending build context to Docker daemon  70.23MBSending build context to Docker daemon  84.59MBSending build context to Docker daemon  98.47MBSending build context to Docker daemon  112.9MBSending build context to Docker daemon  126.7MBSending build context to Docker daemon  141.2MBSending build context to Docker daemon    155MBSending build context to Docker daemon  164.2MB
+Step 1/4 : FROM centos:7
+7: Pulling from library/centos
+a02a4930cb5d: Already exists
+Digest: sha256:184e5f35598e333bfa7de10d8fb1cebb5ee4df5bc0f970bf2b1e7c7345136426
+Status: Downloaded newer image for centos:7
+ ---> 1e1148e4cc2c
+Step 2/4 : EXPOSE 8080
+ ---> Running in 0ab87800ac98
+ ---> f1c366075f98
+Step 3/4 : CMD /guitar-exercises
+ ---> Running in e71120ae72ae
+ ---> 7d1bbc3d886c
+Step 4/4 : COPY ./ /
+ ---> 32019b6b8a4c
+Successfully built 32019b6b8a4c
+The push refers to a repository [10.11.241.147:5000/sebosp/guitar-exercises]
+8279b3367c4c: Preparing
+071d8bd76517: Preparing
+8279b3367c4c: Pushed
+071d8bd76517: Pushed
+0.0.4: digest: sha256:42349dbab680a9d1fdf50af08e125cc519a0b370d74a2e5edc2b55989c3bd467 size: 741
+Build complete in 30.708083792s
+Starting test...
+Test complete in 9.869µs
+changeme -> 10.11.241.147:5000/sebosp/guitar-exercises:0.0.4
+[Pipeline] sh
++ cat VERSION
++ jx step post build --image 10.11.241.147:5000/sebosp/guitar-exercises:0.0.4
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Promote to Environments)
+[Pipeline] dir
+Running in /tmp/jenkinsTests.tmp/jenkins3498543443733174814test/workspace/job/charts/guitar-exercises
+[Pipeline] {
+[Pipeline] sh
++ cat ../../VERSION
++ jx step changelog --version v0.0.4
+Using batch mode as inside a pipeline
+Converted /tmp/jenkinsTests.tmp/jenkins3498543443733174814test/workspace/job/charts/guitar-exercises to an unshallow repository
+Generating change log from git ref 9a55e9a50511822b2cf8d1827fc529bbffbb2d34 => 6f943bf54083a082c4bc6231fb81b34767e580b3
+Failed to enrich commits with issues: User.jenkins.io "" is invalid: metadata.name: Required value: name or generateName is required
+Failed to enrich commits with issues: User.jenkins.io "" is invalid: metadata.name: Required value: name or generateName is required
+Finding issues in commit messages using git format
+No release found for sebosp/guitar-exercises and tag v0.0.4 so creating a new release
+Updated the release information at https://github.com/sebosp/guitar-exercises/releases/tag/v0.0.4
+generated: /tmp/jenkinsTests.tmp/jenkins3498543443733174814test/workspace/job/charts/guitar-exercises/templates/release.yaml
+Created Release guitar-exercises-0-0-4 resource in namespace jx
+Updating PipelineActivity sebosp-guitar-exercises-master-4 with version 0.0.4
+Updated PipelineActivities sebosp-guitar-exercises-master-4 with release notes URL: https://github.com/sebosp/guitar-exercises/releases/tag/v0.0.4
+[Pipeline] sh
++ jx step helm release
+No $CHART_REPOSITORY defined so using the default value of: http://jenkins-x-chartmuseum:8080
+Adding missing Helm repo: jenkins-x http://chartmuseum.jenkins-x.io
+Successfully added Helm repository jenkins-x.
+Adding missing Helm repo: releases http://jenkins-x-chartmuseum:8080
+Successfully added Helm repository releases.
+No $CHART_REPOSITORY defined so using the default value of: http://jenkins-x-chartmuseum:8080
+Uploading chart file guitar-exercises-0.0.4.tgz to http://jenkins-x-chartmuseum:8080/api/charts
+Received 201 response: {"saved":true}
+[Pipeline] sh
++ cat ../../VERSION
++ jx promote -b --all-auto --timeout 1h --version 0.0.4
+prow based install so skip waiting for the merge of Pull Requests to go green as currently there is an issue with gettingstatuses from the PR, see https://github.com/jenkins-x/jx/issues/2410
+Promoting app guitar-exercises version 0.0.4 to namespace jx-staging
+Created Pull Request: https://github.com/sebosp/environment-seedlove-staging/pull/1
+
+Failed to query the Pull Request last commit status for https://github.com/sebosp/environment-seedlove-staging/pull/1 ref f7621482eda3bcdc0043c3cce0acfe833745b98b Could not find a status for repository sebosp/environment-seedlove-staging with ref f7621482eda3bcdc0043c3cce0acfe833745b98b
+Pull Request https://github.com/sebosp/environment-seedlove-staging/pull/1 is merged at sha dae117d41899c264c690b601760e052f0e8fa6c0
+Pull Request merged but we are not waiting for the update pipeline to complete!
+Could not find the service URL in namespace jx-staging for names guitar-exercises, jx-guitar-exercises, jx-staging-guitar-exercises
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
