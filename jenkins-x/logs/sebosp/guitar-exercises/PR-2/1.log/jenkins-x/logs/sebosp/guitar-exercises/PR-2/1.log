@@ -1,0 +1,262 @@
+Step: build-step-credential-initializer:
+
+{"level":"warn","ts":1548590987.52163,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548590987.522386,"logger":"fallback-logger","caller":"creds-init/main.go:40","msg":"Credentials initialized."}
+Step: build-step-git-source-0:
+
+{"level":"warn","ts":1548590989.7512002,"logger":"fallback-logger","caller":"logging/config.go:65","msg":"Fetch GitHub commit ID from kodata failed: \"ref: refs/heads/test\" is not a valid GitHub commit ID"}
+{"level":"info","ts":1548590990.1314788,"logger":"fallback-logger","caller":"git-init/main.go:92","msg":"Successfully cloned \"https://github.com/sebosp/guitar-exercises.git\" @ \"d505c9cb65f06234058fdf0da3436d068833308c\" in path \"/workspace\""}
+Step: build-step-jenkins:
+
+Picked up _JAVA_OPTIONS: -Xmx400m
+Started
+Running in Durability level: PERFORMANCE_OPTIMIZED
+  18.514 [id=34]	WARNING	i.f.k.c.i.VersionUsageUtils#alert: The client is using resource type 'customresourcedefinitions' with unstable version 'v1beta1'
+[Pipeline] node
+Running on Jenkins in /tmp/jenkinsTests.tmp/jenkins8333513129920419297test/workspace/job
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withCredentials
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (CI Build and push snapshot)
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ rustup override set nightly
+info: syncing channel updates for 'nightly-x86_64-unknown-linux-gnu'
+info: latest update on 2019-01-27, rust version 1.33.0-nightly (20c2cba61 2019-01-26)
+info: downloading component 'rustc'
+info: downloading component 'rust-std'
+info: downloading component 'cargo'
+info: downloading component 'rust-docs'
+info: installing component 'rustc'
+info: installing component 'rust-std'
+info: installing component 'cargo'
+info: installing component 'rust-docs'
+info: override toolchain for '/tmp/jenkinsTests.tmp/jenkins8333513129920419297test/workspace/job' set to 'nightly-x86_64-unknown-linux-gnu'
+
+  nightly-x86_64-unknown-linux-gnu installed - rustc 1.33.0-nightly (20c2cba61 2019-01-26)
+
+[Pipeline] sh
++ cargo install --path .
+  Installing guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins8333513129920419297test/workspace/job)
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded rocket v0.4.0
+  Downloaded rocket_codegen v0.4.0
+  Downloaded yansi v0.5.0
+  Downloaded toml v0.4.10
+  Downloaded log v0.4.6
+  Downloaded rocket_http v0.4.0
+  Downloaded base64 v0.10.1
+  Downloaded isatty v0.1.9
+  Downloaded version_check v0.1.5
+  Downloaded pear v0.1.2
+  Downloaded memchr v2.1.3
+  Downloaded state v0.4.1
+  Downloaded cfg-if v0.1.6
+  Downloaded devise v0.2.0
+  Downloaded quote v0.6.11
+  Downloaded byteorder v1.3.1
+  Downloaded hyper v0.10.15
+  Downloaded num_cpus v1.9.0
+  Downloaded smallvec v0.6.8
+  Downloaded serde v1.0.85
+  Downloaded pear_codegen v0.1.2
+  Downloaded indexmap v1.0.2
+  Downloaded cookie v0.11.0
+  Downloaded percent-encoding v1.0.1
+  Downloaded unicode-xid v0.1.0
+  Downloaded libc v0.2.48
+  Downloaded language-tags v0.2.2
+  Downloaded httparse v1.3.3
+  Downloaded syn v0.15.26
+  Downloaded log v0.3.9
+  Downloaded time v0.1.42
+  Downloaded base64 v0.9.3
+  Downloaded ring v0.13.5
+  Downloaded proc-macro2 v0.4.26
+  Downloaded traitobject v0.1.0
+  Downloaded devise_codegen v0.2.0
+  Downloaded url v1.7.2
+  Downloaded devise_core v0.2.0
+  Downloaded unicase v1.4.2
+  Downloaded mime v0.2.6
+  Downloaded yansi v0.4.0
+  Downloaded idna v0.1.5
+  Downloaded unreachable v1.0.0
+  Downloaded bitflags v1.0.4
+  Downloaded matches v0.1.8
+  Downloaded lazy_static v1.2.0
+  Downloaded cc v1.0.28
+  Downloaded safemem v0.3.0
+  Downloaded unicode-bidi v0.3.4
+  Downloaded void v1.0.2
+  Downloaded untrusted v0.6.2
+  Downloaded typeable v0.1.2
+  Downloaded unicode-normalization v0.1.8
+   Compiling void v1.0.2
+   Compiling proc-macro2 v0.4.26
+   Compiling unicode-xid v0.1.0
+   Compiling cfg-if v0.1.6
+   Compiling yansi v0.4.0
+   Compiling libc v0.2.48
+   Compiling byteorder v1.3.1
+   Compiling cc v1.0.28
+   Compiling version_check v0.1.5
+   Compiling matches v0.1.8
+   Compiling httparse v1.3.3
+   Compiling bitflags v1.0.4
+   Compiling safemem v0.3.0
+   Compiling percent-encoding v1.0.1
+   Compiling lazy_static v1.2.0
+   Compiling untrusted v0.6.2
+   Compiling typeable v0.1.2
+   Compiling language-tags v0.2.2
+   Compiling yansi v0.5.0
+   Compiling traitobject v0.1.0
+   Compiling serde v1.0.85
+   Compiling memchr v2.1.3
+   Compiling indexmap v1.0.2
+   Compiling state v0.4.1
+   Compiling unreachable v1.0.0
+   Compiling log v0.4.6
+   Compiling unicase v1.4.2
+   Compiling pear_codegen v0.1.2
+   Compiling unicode-bidi v0.3.4
+   Compiling ring v0.13.5
+   Compiling rocket_codegen v0.4.0
+   Compiling rocket v0.4.0
+   Compiling smallvec v0.6.8
+   Compiling log v0.3.9
+   Compiling unicode-normalization v0.1.8
+   Compiling time v0.1.42
+   Compiling num_cpus v1.9.0
+   Compiling isatty v0.1.9
+   Compiling base64 v0.9.3
+   Compiling base64 v0.10.1
+   Compiling mime v0.2.6
+   Compiling quote v0.6.11
+   Compiling toml v0.4.10
+   Compiling idna v0.1.5
+   Compiling syn v0.15.26
+   Compiling url v1.7.2
+   Compiling cookie v0.11.0
+   Compiling hyper v0.10.15
+   Compiling devise_core v0.2.0
+   Compiling pear v0.1.2
+   Compiling rocket_http v0.4.0
+   Compiling devise_codegen v0.2.0
+   Compiling devise v0.2.0
+   Compiling guitar-exercises v0.1.0 (/tmp/jenkinsTests.tmp/jenkins8333513129920419297test/workspace/job)
+    Finished release [optimized] target(s) in 4m 52s
+  Installing /builder/home/.cargo/bin/guitar-exercises
+[Pipeline] sh
++ cp /builder/home/.cargo/bin/guitar-exercises .
+[Pipeline] sh
++ export VERSION=0.0.0-SNAPSHOT-PR-2-1
++ skaffold build -f skaffold.yaml
+time="2019-01-27T12:17:26Z" level=warning msg="config version (skaffold/v1beta2) out of date: upgrading to latest (skaffold/v1beta3)"
+Starting build...
+Building [changeme]...
+Sending build context to Docker daemon  556.5kBSending build context to Docker daemon  8.297MBSending build context to Docker daemon  24.27MBSending build context to Docker daemon  38.03MBSending build context to Docker daemon  52.94MBSending build context to Docker daemon  68.95MBSending build context to Docker daemon  83.31MBSending build context to Docker daemon  95.46MBSending build context to Docker daemon  108.3MBSending build context to Docker daemon  123.8MBSending build context to Docker daemon  137.6MBSending build context to Docker daemon  140.6MB
+Step 1/4 : FROM debian:8
+8: Pulling from library/debian
+8ac9f5ca4429: Pulling fs layer
+8ac9f5ca4429: Verifying Checksum
+8ac9f5ca4429: Download complete
+8ac9f5ca4429: Pull complete
+Digest: sha256:26dfc818af93a58695a5a3ef615ca63be387f6769ab2620be7e0716d8b474a48
+Status: Downloaded newer image for debian:8
+ ---> 51a215bbbb19
+Step 2/4 : EXPOSE 8080
+ ---> Running in 9e83404a1f8f
+ ---> 3f005fc65ad5
+Step 3/4 : CMD /guitar-exercises
+ ---> Running in 23859ee5d8f8
+ ---> e9719fd3a858
+Step 4/4 : COPY ./ /
+ ---> 5726cacde21e
+Successfully built 5726cacde21e
+The push refers to a repository [10.11.241.147:5000/sebosp/guitar-exercises]
+5c0e69d9dc78: Preparing
+0af75f18b2dd: Preparing
+0af75f18b2dd: Layer already exists
+5c0e69d9dc78: Pushed
+0.0.0-SNAPSHOT-PR-2-1: digest: sha256:a48ec0e0b3309e8fe92a73b07a3945610ad4f08e45ec018ac9f930ed56348db3 size: 741
+Build complete in 21.820399995s
+Starting test...
+Test complete in 4.573µs
+changeme -> 10.11.241.147:5000/sebosp/guitar-exercises:0.0.0-SNAPSHOT-PR-2-1
+[Pipeline] sh
++ jx step post build --image 10.11.241.147:5000/sebosp/guitar-exercises:0.0.0-SNAPSHOT-PR-2-1
+[Pipeline] dir
+Running in /tmp/jenkinsTests.tmp/jenkins8333513129920419297test/workspace/job/charts/preview
+[Pipeline] {
+[Pipeline] sh
++ make preview
+sed -i -e "s/version:.*/version: 0.0.0-SNAPSHOT-PR-2-1/" Chart.yaml
+sed -i -e "s/version:.*/version: 0.0.0-SNAPSHOT-PR-2-1/" ../*/Chart.yaml
+sed -i -e "s|repository:.*|repository: 10.11.241.147:5000\/sebosp\/guitar-exercises|" values.yaml
+sed -i -e "s/tag:.*/tag: 0.0.0-SNAPSHOT-PR-2-1/" values.yaml
+echo "  version: 0.0.0-SNAPSHOT-PR-2-1" >> requirements.yaml
+jx step helm build
+No $CHART_REPOSITORY defined so using the default value of: http://jenkins-x-chartmuseum:8080
+Adding missing Helm repo: jenkins-x http://chartmuseum.jenkins-x.io
+Successfully added Helm repository jenkins-x.
+Adding missing Helm repo: releases http://jenkins-x-chartmuseum:8080
+Successfully added Helm repository releases.
+[Pipeline] sh
++ jx preview --app guitar-exercises --dir ../..
+Creating a preview
+Commit author email is empty for: d505c9cb65f06234058fdf0da3436d068833308c
+Looking for commits in: /tmp/jenkinsTests.tmp/jenkins8333513129920419297test/workspace/job/
+Found commit author match for: sebosp with email address: kraige@gmail.com
+Created environment sebosp-guitar-exercises-pr-2
+Namespace jx-sebosp-guitar-exercises-pr-2 created 
+ expose:
+  Annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: hook-succeeded
+  config:
+    domain: 35.238.106.218.nip.io
+    exposer: Ingress
+    http: "true"
+preview:
+  image:
+    repository: 10.11.241.147:5000/sebosp/guitar-exercises
+    tag: 0.0.0-SNAPSHOT-PR-2-1
+Failed to update PipelineActivities sebosp-guitar-exercises-pr-2-1: the namespace of the object (jx-sebosp-guitar-exercises-pr-2) does not match the namespace on the request (jx)
+Preview application is now available at: http://guitar-exercises.jx-sebosp-guitar-exercises-pr-2.35.238.106.218.nip.io
+
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Release)
+Stage "Build Release" skipped due to when conditional
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Promote to Environments)
+Stage "Promote to Environments" skipped due to when conditional
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
