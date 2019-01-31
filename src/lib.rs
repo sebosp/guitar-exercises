@@ -1,4 +1,15 @@
 
+extern crate pitch_calc;
+
+use pitch_calc::{
+    Hz,
+    Letter,
+    LetterOctave,
+    ScaledPerc,
+    Step,
+    Octave,
+};
+
 /// `StringMaterials` maintains types that make up a string.
 /// https://en.wikipedia.org/wiki/String_(music)
 enum FlexibleMaterial {
@@ -15,30 +26,41 @@ struct StringedElement {
     material: FlexibleMaterial,
     /// The gauge of the string, in Millimeters
     gauge: f64,
-    /// A vibrating string vibrates with a set of frequencies that depend on
-    /// the string's tension. These frequencies can be derived from Newton's
-    /// laws of motion. https://en.wikipedia.org/wiki/Tension_(physics)
-    /// The frequency is stored in Hertz
-    frequency: f64,
+    /// The note of the open string
+    note: pitch_calc::Letter,
+    /// The octave of the open string
+    octave: pitch_calc::Octave,
+    /// The string can be disabled for jumping exercises, broken strings, etc
     enabled: bool,
 }
 
 impl StringedElement {
-    fn new_steel(gauge: f64, frequency: f64) -> StringedElement {
+    /// `new_steel` creates a new steel string
+    fn new_steel(gauge: f64, letter_octave: pitch_calc::LetterOctave) -> StringedElement {
         StringedElement {
             material: FlexibleMaterial::Steel,
             enabled: true,
             gauge: gauge,
-            frequency: frequency,
+            note: letter_octave.0,
+            octave: letter_octave.1,
         }
     }
-    fn new_wound(gauge: f64, frequency: f64) -> StringedElement {
+    /// `new_wound` creates a new wounded string, some exercises may need
+    /// special speed adjustment depending on the gauge
+    fn new_wound(gauge: f64, letter_octave: pitch_calc::LetterOctave) -> StringedElement {
         StringedElement {
             material: FlexibleMaterial::Wound,
             enabled: true,
             gauge: gauge,
-            frequency: frequency,
+            note: letter_octave.0,
+            octave: letter_octave.1,
         }
+    }
+    /// `to_hz` returns the open string Frequency in Hertz
+    /// A vibrating string vibrates with a set of frequencies that depend on
+    /// the string's tension. pitch
+    fn to_hz(self) -> pitch_calc::Hz {
+        LetterOctave(self.note, self.octave).to_hz()
     }
 }
 
@@ -57,12 +79,12 @@ impl Default for Fretboard {
     fn default() -> Fretboard {
         Fretboard {
             strings: vec![
-                StringedElement::new_steel(0.2540, 329.63), // E4
-                StringedElement::new_steel(0.3302, 246.94), // B3
-                StringedElement::new_steel(0.4318, 196.00), // G3
-                StringedElement::new_wound(0.6604, 146.83), // D3
-                StringedElement::new_wound(0.9144, 110.00), // A2
-                StringedElement::new_wound(1.1684, 82.41),  // E2
+                StringedElement::new_steel(0.2540, LetterOctave(Letter::E, 4)), // E4
+                StringedElement::new_steel(0.3302, LetterOctave(Letter::B, 3)), // B3
+                StringedElement::new_steel(0.4318, LetterOctave(Letter::G, 3)), // G3
+                StringedElement::new_wound(0.6604, LetterOctave(Letter::D, 3)), // D3
+                StringedElement::new_wound(0.9144, LetterOctave(Letter::A, 2)), // A2
+                StringedElement::new_wound(1.1684, LetterOctave(Letter::E, 2)), // E2
             ],
             frets: 24, 
         }
@@ -88,6 +110,8 @@ struct Finger {
     agility: u8,
     /// A finger may be free or already busy
     used: bool,
+    /// The finger can be disabled for skipping exercises, broken, etc
+    enabled: bool,
 }
 
 impl Finger {
@@ -106,6 +130,7 @@ impl Finger {
                 strength: 0,
                 agility: 0,
                 used: false,
+                enabled: true,
         }
     }
 }
