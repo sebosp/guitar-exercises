@@ -1,5 +1,6 @@
 
 extern crate pitch_calc;
+extern crate chords;
 
 use pitch_calc::{
     Hz,
@@ -115,7 +116,7 @@ struct Finger {
 }
 
 impl Finger {
-    fn new(name: String) -> Finger {
+    fn new(name: String, strength: u8, agility: u8) -> Finger {
         let finger_digit = match name.as_ref() {
             "Thumb" => FingerDigit::Thumb,
             "Index" => FingerDigit::Index,
@@ -127,8 +128,8 @@ impl Finger {
         Finger{
                 digit: finger_digit,
                 fret: 0,
-                strength: 0,
-                agility: 0,
+                strength: strength,
+                agility: agility,
                 used: false,
                 enabled: true,
         }
@@ -153,17 +154,47 @@ struct Hand {
 /// `Default` is the left hand setup
 impl Default for Hand{
     fn default() -> Hand {
+        // These are made-up numbers, maybe check some studies
         Hand{
             fingers: vec![
-                Finger::new("Thumb".to_owned()),
-                Finger::new("Index".to_owned()),
-                Finger::new("Middle".to_owned()),
-                Finger::new("Ring".to_owned()),
-                Finger::new("Little".to_owned()),
+
+                Finger::new(
+                    "Index".to_owned(),
+                    3u8, // Medium Strength
+                    4u8, // High Agility
+                    ),
+                Finger::new(
+                    "Middle".to_owned(),
+                    4u8, // High Strength
+                    5u8, // High Agility
+                    ),
+                Finger::new(
+                    "Ring".to_owned(),
+                    3u8, // Medium Strength
+                    3u8, // Medium Agility
+                    ),
+                Finger::new(
+                    "Little".to_owned(),
+                    2u8, // Low Strength
+                    2u8, // Low Agility
+                    ),
             ],
             dexterity: 0,
             side: HandSide::Left,
         }
+    }
+}
+
+impl Hand{
+    fn with_thumb(mut self) -> Self {
+        self.fingers.insert(
+            0usize,
+            Finger::new(
+                "Thumb".to_owned(),
+                5u8, // Maximum Strength
+                0u8, // Minimum Agility
+            ));
+        self
     }
 }
 
