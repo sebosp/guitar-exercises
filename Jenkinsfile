@@ -17,6 +17,7 @@ pipeline {
       }
       steps {
         sh "rustup override set nightly"
+        sh "cargo test"
         sh "cargo install --path ."
         sh "cp ~/.cargo/bin/guitar-exercises ."
         sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
@@ -38,6 +39,7 @@ pipeline {
         sh "echo \$(jx-release-version) > VERSION"
         sh "jx step tag --version \$(cat VERSION)"
         sh "rustup override set nightly"
+        sh "cargo test"
         sh "cargo install --path ."
         sh "cp ~/.cargo/bin/guitar-exercises ."
         sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
