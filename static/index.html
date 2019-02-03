@@ -1,6 +1,47 @@
-<h1>A Guitar Exercises generator</h1>
-
-<p>Powered by Jenkins-X</p>
-<a>
-  <img border="0" src="http://jenkins-x.io/images/logo.png" width="300" height="300"/>
-</a>
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Guitar Exercises</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+  </head>
+  <body>
+    <h1>Main Fretboard</h1>
+    <div class="container-fluid">
+      <div class="row justify-content-md-center">
+        <div class="col">1</div>
+        <div class="col">2</div>
+        <div class="col">3</div>
+        <div class="col">4</div>
+        <div class="col">5</div>
+        <div class="col">6</div>
+        <div class="col">7</div>
+        <div class="col">8</div>
+        <div class="col">9</div>
+        <div class="col">10</div>
+        <div class="col">11</div>
+        <div class="col">12</div>
+      </div>
+    </div>
+    <div id="content"></div>
+    <h6>A Guitar Exercises generator</h6>
+    <p>Powered by Jenkins-X</p>
+    <a>
+      <img border="0" alt="Jenkins-X" src="http://jenkins-x.io/images/logo.png" width="20" height="20"/>
+    </a>
+  </body>
+  <script>
+      var fretboard = d3.select("#content")
+        .append("div")
+        .attr("class","container-fluid");
+      var string1 = fretboard
+        .append("div")
+        .attr("class","row justify-content-md-center");
+      string1.selectAll(".col")
+        .data([1,0,1,0,1,0,1,1,0,1,0,1])
+        .enter().append("div")
+          .text(function(d){return d})
+          .attr("class","col");
+    </script>
+</html>

@@ -36,6 +36,6 @@ mod test {
         let client = Client::new(rocket()).unwrap();
         let mut response = client.get("/").dispatch();
         assert_eq!(response.status(), Status::Ok);
-        assert_eq!(response.body_string().unwrap_or_default().find("<h1>A Guitar Exercises generator</h1>"), Some(0));
+        assert_eq!(response.body_string().unwrap_or_default().find("<h6>A Guitar Exercises generator</h6>").is_some(), true);
     }
 }
