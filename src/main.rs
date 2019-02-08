@@ -2,6 +2,8 @@
 
 #[macro_use] extern crate rocket;
 
+extern crate guitar_exercises;
+
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -12,13 +14,18 @@ fn index() -> io::Result<NamedFile> {
     NamedFile::open("static/index.html")
 }
 
+#[get("/random")]
+fn random_scale() -> String {
+    format!("{}", guitar_exercises::scale::ScaleCategory::random())
+}
+
 #[get("/<file..>")]
 fn files(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("static/").join(file)).ok()
 }
 
 fn rocket() -> rocket::Rocket {
-    rocket::ignite().mount("/", routes![index, files])
+    rocket::ignite().mount("/", routes![index, random_scale, files])
 }
 
 fn main() {
