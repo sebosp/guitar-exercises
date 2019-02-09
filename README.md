@@ -30,7 +30,8 @@ digitalocean droplets. Maybe an HTML only version can be generated.
 
 ## Running locally
 TBD: DockerHub
+`cargo run` should be enough, then on a browser localhost:8080
 
 ## Tooling
 Using JenkinsX, Rust and Rocket.
-Fork it, cd into clone and `jx import` if you want to change things, PR welcome
+Fork it, cd into clone and `jx import` if you want to change things, PRs are welcome
