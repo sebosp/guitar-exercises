@@ -1,3 +1,4 @@
+/// `fretboard` contains functionality that maps a scale to a fretboard
 use pitch_calc::{
     Hz,
     Letter,
@@ -19,6 +20,7 @@ enum FlexibleMaterial {
 
 /// `StringedElement` contains the gauge and frequency of the open string.
 /// Used to calculate when the next "note" in a scale should be length-wise 
+#[derive(Debug)]
 pub struct StringedElement {
     material: FlexibleMaterial,
     /// The gauge of the string, in Millimeters
@@ -62,16 +64,18 @@ impl StringedElement {
 }
 
 /// `Fretboard` a vector of strings to practice on
+#[derive(Debug)]
 struct Fretboard {
     strings: Vec<StringedElement>,
     frets: u8,
 }
 
-/// `Default` provides a Guitar
+/// `Default` provides a 6 string standard tuning Guitar
+/// with 24 frets
 impl Default for Fretboard {
     /// Gauge used is Regular Light
     /// from https://en.wikipedia.org/wiki/String_(music)#Electric_guitar
-    /// Notes and Frequencies are taken from:
+    /// Notes are taken from:
     /// https://en.wikipedia.org/wiki/Guitar_tunings
     fn default() -> Fretboard {
         Fretboard {
@@ -85,5 +89,14 @@ impl Default for Fretboard {
             ],
             frets: 24, 
         }
+    }
+}
+impl Fretboard {
+    pub fn default_7() -> Fretboard {
+        let mut guitar = Fretboard::default();
+        guitar.strings.append(
+          StringedElement::new_wound(1.4224, LetterOctave(Letter::B, 1)), // B1
+        );
+        guitar
     }
 }
