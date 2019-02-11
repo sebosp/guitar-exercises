@@ -10,6 +10,7 @@ use pitch_calc::{
 
 /// `StringMaterials` maintains types that make up a string.
 /// https://en.wikipedia.org/wiki/String_(music)
+#[derive(Debug)]
 enum FlexibleMaterial {
     Steel,
     Nylon,
@@ -94,7 +95,7 @@ impl Default for Fretboard {
 impl Fretboard {
     pub fn default_7() -> Fretboard {
         let mut guitar = Fretboard::default();
-        guitar.strings.append(
+        guitar.strings.push(
           StringedElement::new_wound(1.4224, LetterOctave(Letter::B, 1)), // B1
         );
         guitar
