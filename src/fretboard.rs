@@ -8,9 +8,11 @@ use pitch_calc::{
     Octave,
 };
 
+use super::ScaleCategory;
+
 /// `StringMaterials` maintains types that make up a string.
 /// https://en.wikipedia.org/wiki/String_(music)
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum FlexibleMaterial {
     Steel,
     Nylon,
@@ -21,7 +23,7 @@ enum FlexibleMaterial {
 
 /// `StringedElement` contains the gauge and frequency of the open string.
 /// Used to calculate when the next "note" in a scale should be length-wise 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct StringedElement {
     material: FlexibleMaterial,
     /// The gauge of the string, in Millimeters
@@ -32,10 +34,14 @@ pub struct StringedElement {
     octave: pitch_calc::Octave,
     /// The string can be disabled for jumping exercises, broken strings, etc
     enabled: bool,
+    /// The frets state for the guitar
+    frets: Vec<bool>,
+    /// The number of frets in the instrument
+    number_of_frets: usize,
 }
 
 impl StringedElement {
-    /// `new_steel` creates a new steel string
+    /// `new_steel` creates a new steel string with 24 frets.
     pub fn new_steel(gauge: f64, letter_octave: pitch_calc::LetterOctave) -> StringedElement {
         StringedElement {
             material: FlexibleMaterial::Steel,
@@ -43,6 +49,8 @@ impl StringedElement {
             gauge: gauge,
             note: letter_octave.0,
             octave: letter_octave.1,
+            frets: vec![],
+            number_of_frets: 24,
         }
     }
     /// `new_wound` creates a new wounded string, some exercises may need
@@ -53,7 +61,9 @@ impl StringedElement {
             enabled: true,
             gauge: gauge,
             note: letter_octave.0,
+            frets: vec![],
             octave: letter_octave.1,
+            number_of_frets: 24,
         }
     }
     /// `to_hz` returns the open string Frequency in Hertz
@@ -65,10 +75,10 @@ impl StringedElement {
 }
 
 /// `Fretboard` a vector of strings to practice on
-#[derive(Debug)]
+#[derive(Debug, Copy)]
 struct Fretboard {
     strings: Vec<StringedElement>,
-    frets: u8,
+    scale: ScaleCategory,
 }
 
 /// `Default` provides a 6 string standard tuning Guitar
@@ -88,16 +98,30 @@ impl Default for Fretboard {
                 StringedElement::new_wound(0.9144, LetterOctave(Letter::A, 2)), // A2
                 StringedElement::new_wound(1.1684, LetterOctave(Letter::E, 2)), // E2
             ],
-            frets: 24, 
+            scale: ScaleCategory::default(),
         }
     }
 }
 impl Fretboard {
+    /// `default_7` provides a standard 7 strings guitar.
     pub fn default_7() -> Fretboard {
         let mut guitar = Fretboard::default();
         guitar.strings.push(
           StringedElement::new_wound(1.4224, LetterOctave(Letter::B, 1)), // B1
         );
         guitar
+    }
+    /// `set_scale_string_frets` enables different frets in the fretboard depending on the scale
+    pub fn set_scale_string_frets(&mut self) {
+        for current_string in self.strings {
+            for current_fret in 0..current_string.number_of_frets {
+                let current_note = current_string;
+                if self.scale.scale_notes.contains(&current_string.note) {
+                    current_string.frets.push(true);
+                } else {
+                    current_string.frets.push(false);                    
+                }
+            }
+        }
     }
 }
