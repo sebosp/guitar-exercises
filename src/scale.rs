@@ -15,21 +15,22 @@ use num_traits::cast::FromPrimitive;
 use num_traits::cast::ToPrimitive;
 
 /// `ScaleCategory` for Major, Minor, etc on a given note/pitch
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ScaleCategory {
-    category: String,
-    scale_notes: Vec<Letter>,
+    pub category: String,
+    pub scale_notes: Vec<Letter>,
 }
 
 impl Default for ScaleCategory {
     fn default() -> ScaleCategory {
         ScaleCategory{
-            scale_notes: vec![Letter::C],
+            scale_notes: vec![],
             category: "Major".to_string()
         }
     }
 }
 
+/// `ScaleCategory` shows a 
 impl ScaleCategory {
     pub fn random() -> ScaleCategory {
         let mut rng = rand::thread_rng();
