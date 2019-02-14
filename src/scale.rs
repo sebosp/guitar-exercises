@@ -30,7 +30,7 @@ impl Default for ScaleCategory {
     }
 }
 
-/// `ScaleCategory` shows a 
+/// `ScaleCategory` implements random scales and categories
 impl ScaleCategory {
     pub fn random() -> ScaleCategory {
         let mut rng = rand::thread_rng();
