@@ -1,4 +1,5 @@
 /// `fretboard` contains functionality that maps a scale to a fretboard
+use std::fmt;
 use pitch_calc::{
     Hz,
     Letter,
@@ -12,7 +13,7 @@ use super::ScaleCategory;
 
 /// `StringMaterials` maintains types that make up a string.
 /// https://en.wikipedia.org/wiki/String_(music)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum FlexibleMaterial {
     Steel,
     Nylon,
@@ -23,7 +24,7 @@ enum FlexibleMaterial {
 
 /// `StringedElement` contains the gauge and frequency of the open string.
 /// Used to calculate when the next "note" in a scale should be length-wise 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct StringedElement {
     material: FlexibleMaterial,
     /// The gauge of the string, in Millimeters
@@ -74,9 +75,25 @@ impl StringedElement {
     }
 }
 
+impl fmt::Display for StringedElement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // XXX: We allow different frets per string to allow for scallopped
+        // Figure out how to put them spaced properly
+        let mut fret_positions = String::from("|");
+        for pos in self.frets.iter() {
+            if *pos {
+                fret_positions.push_str("1|");
+            } else {
+                fret_positions.push_str("0|");
+            }
+        }
+        write!(f, "({}: {})", ::note_to_string(self.note), fret_positions, )
+    }
+}
+
 /// `Fretboard` a vector of strings to practice on
-#[derive(Debug, Copy)]
-struct Fretboard {
+#[derive(Debug, Clone)]
+pub struct Fretboard {
     strings: Vec<StringedElement>,
     scale: ScaleCategory,
 }
@@ -113,15 +130,29 @@ impl Fretboard {
     }
     /// `set_scale_string_frets` enables different frets in the fretboard depending on the scale
     pub fn set_scale_string_frets(&mut self) {
-        for current_string in self.strings {
-            for current_fret in 0..current_string.number_of_frets {
-                let current_note = current_string;
-                if self.scale.scale_notes.contains(&current_string.note) {
+        for current_string in &mut self.strings {
+            let mut current_note = current_string.note;
+            for _ in 0..current_string.number_of_frets {
+                if self.scale.scale_notes.contains(&current_note) {
                     current_string.frets.push(true);
                 } else {
                     current_string.frets.push(false);                    
                 }
+                current_note = current_note + 1;
             }
         }
+    }
+    pub fn random() -> Fretboard {
+        let mut guitar = Fretboard::default();
+        guitar.scale = ::scale::ScaleCategory::random();
+        guitar.set_scale_string_frets();
+        guitar
+    }
+}
+
+
+impl fmt::Display for Fretboard {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}\n {:?})", self.scale, self.strings)
     }
 }
