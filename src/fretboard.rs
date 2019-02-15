@@ -1,5 +1,6 @@
 /// `fretboard` contains functionality that maps a scale to a fretboard
 use std::fmt;
+use std::io::Write;
 use pitch_calc::{
     Hz,
     Letter,
@@ -82,12 +83,12 @@ impl fmt::Display for StringedElement {
         let mut fret_positions = String::from("|");
         for pos in self.frets.iter() {
             if *pos {
-                fret_positions.push_str("1|");
+                fret_positions.push_str("X|");
             } else {
-                fret_positions.push_str("0|");
+                fret_positions.push_str("-|");
             }
         }
-        write!(f, "({}: {})", ::note_to_string(self.note), fret_positions, )
+        write!(f, "{}: {}", ::note_to_string(self.note), fret_positions)
     }
 }
 
@@ -153,6 +154,22 @@ impl Fretboard {
 
 impl fmt::Display for Fretboard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({}\n {:?})", self.scale, self.strings)
+        let mut w = Vec::new();
+        let mut guitar_header = "---|".to_string();
+        let mut guitar_footer = "---|".to_string();
+        write!(w, "{}\n{}", self.scale, guitar_header).unwrap();
+        let mut max_frets = 0usize;
+        for current_string in self.strings.iter() {
+            if max_frets < current_string.number_of_frets {
+                max_frets = current_string.number_of_frets;
+            }
+            write!(w, "{}\n", *current_string).unwrap();
+        }
+        for _ in 0..max_frets {
+            guitar_header.push_str("-");
+            guitar_footer.push_str("-");
+        }
+        write!(w, "{}", guitar_footer).unwrap();
+        write!(f, "{:?}", String::from_utf8(w))
     }
 }
