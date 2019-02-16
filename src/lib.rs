@@ -3,14 +3,57 @@ extern crate pitch_calc;
 extern crate chords;
 extern crate rand;
 extern crate num_traits;
+#[macro_use]
+extern crate log;
+extern crate clap;
+extern crate stderrlog;
+#[macro_use]
+extern crate derive_builder;
 
 pub mod fretboard;
 pub mod hand;
 pub mod scale;
+pub mod pattern;
 
 use fretboard::*;
 use hand::*;
 use scale::*;
+use pattern::*;
+
+/// `GuitarExerciseMode` can be a request for command line interface or http
+#[derive(Clone, Debug)]
+pub enum GuitarExerciseMode {
+    Cli,
+    Web
+}
+
+impl Default for GuitarExerciseMode {
+    fn default() -> GuitarExerciseMode{
+        GuitarExerciseMode::Cli
+    }
+}
+
+/// `GuitarExerciseRequest` serves a request for an exercise
+#[derive(Builder,Debug)]
+#[builder(setter(prefix = "with"))]
+pub struct GuitarExerciseRequest {
+    mode: GuitarExerciseMode,
+    scale: ScaleCategory,
+    #[builder(default = "pitch_calc::Letter::C")]
+    note: pitch_calc::Letter,
+    pattern: GuitarExercisePattern,
+}
+
+impl Default for GuitarExerciseRequest {
+    fn default() -> GuitarExerciseRequest {
+        GuitarExerciseRequest{
+            mode: GuitarExerciseMode::Cli,
+            scale: ScaleCategory::default(),
+            note: pitch_calc::Letter::C,
+            pattern: GuitarExercisePattern::default(),
+        }
+    }
+}
 
 pub fn note_to_string(note: pitch_calc::Letter) -> String {
     match note {

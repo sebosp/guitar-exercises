@@ -1,0 +1,27 @@
+name: guitarexercises
+version: "0.1.0"
+author: Sebastian Ospina <kraige@gmail.com>
+about: Guitar Exercises Patterns, Random Scales
+args:
+    - MODE:
+        help: The operating mode for steghide
+        required: true
+        index: 1
+        possible_values:
+            - cli
+            - web
+    - scale:
+        long: scale
+        value_name: SCALE
+        help: The scae to use
+        takes_value: true
+        required: false
+    - note:
+        long: note
+        value_name: NOTE
+        help: The scale starting note
+        takes_value: true
+    - pattern:
+        long: pattern
+        value_name: PATTERN
+        help: Specify a pattern

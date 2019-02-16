@@ -9,3 +9,10 @@ pitch_calc = "0.11.1"
 chords = "0.1.93"
 rand = "0.6.5"
 num-traits = "0.2.6"
+log = "0.4.6"
+stderrlog = "0.4.1"
+derive_builder = "0.7.1"
+
+[dependencies.clap]
+version = "2.32"
+features = [ "yaml" ]

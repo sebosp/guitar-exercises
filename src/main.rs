@@ -16,6 +16,7 @@ fn index() -> io::Result<NamedFile> {
 
 #[get("/random")]
 fn random_scale() -> String {
+    println!("{}", guitar_exercises::fretboard::Fretboard::random());
     format!("{}", guitar_exercises::fretboard::Fretboard::random())
 }
 

@@ -24,7 +24,15 @@ pub struct ScaleCategory {
 impl Default for ScaleCategory {
     fn default() -> ScaleCategory {
         ScaleCategory{
-            scale_notes: vec![],
+            scale_notes: vec![
+                Letter::C,
+                Letter::D,
+                Letter::E,
+                Letter::F,
+                Letter::G,
+                Letter::A,
+                Letter::B,
+            ],
             category: "Major".to_string()
         }
     }
