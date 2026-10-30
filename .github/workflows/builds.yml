@@ -1,0 +1,155 @@
+# The native builds: Linux, Windows, macOS and an Android APK, kept as artifacts of the run and
+# attached to a release for the tags `v*`.
+name: Builds
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      # Bevy's system libraries and ALSA for the microphone; .cargo/config.toml links with clang
+      # and mold.
+      - name: Install the libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev mold clang
+      - name: Format
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --release
+      - name: Build
+        run: cargo build --release
+      - name: Package
+        run: |
+          mkdir -p guitar-exercises-linux-x86_64
+          strip -o guitar-exercises-linux-x86_64/guitar-exercises target/release/guitar-exercises
+          cp README.md LICENSE assets/web/favicon.svg guitar-exercises-linux-x86_64/
+          cp -r assets/fonts guitar-exercises-linux-x86_64/font-licenses && rm guitar-exercises-linux-x86_64/font-licenses/*.ttf
+          tar -czf guitar-exercises-linux-x86_64.tar.gz guitar-exercises-linux-x86_64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guitar-exercises-linux-x86_64
+          path: guitar-exercises-linux-x86_64.tar.gz
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory guitar-exercises-windows-x86_64
+          Copy-Item target/release/guitar-exercises.exe, README.md, LICENSE guitar-exercises-windows-x86_64/
+          Compress-Archive guitar-exercises-windows-x86_64 guitar-exercises-windows-x86_64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guitar-exercises-windows-x86_64
+          path: guitar-exercises-windows-x86_64.zip
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release
+      # A bare binary: run from the Terminal, macOS asks for the microphone for the Terminal.
+      - name: Package
+        run: |
+          mkdir -p guitar-exercises-macos-arm64
+          cp target/release/guitar-exercises README.md LICENSE guitar-exercises-macos-arm64/
+          tar -czf guitar-exercises-macos-arm64.tar.gz guitar-exercises-macos-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guitar-exercises-macos-arm64
+          path: guitar-exercises-macos-arm64.tar.gz
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: mobile
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install the tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mold clang
+          cargo install --locked cargo-apk
+      # The runner has the Android SDK and an NDK.
+      - name: Build the APK
+        env:
+          # The release key, from the secrets of the repository; never in the repository.
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          export ANDROID_NDK_ROOT="$ANDROID_NDK_LATEST_HOME"
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ]; then
+            echo "Signed with the release key"
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export CARGO_APK_RELEASE_KEYSTORE="$RUNNER_TEMP/release.jks"
+            export CARGO_APK_RELEASE_KEYSTORE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
+          else
+            # Without the secrets, a debug key made here: installable, not for a store.
+            echo "Signed with a debug key"
+            keytool -genkey -v -keystore "$RUNNER_TEMP/debug.keystore" -storepass android -alias androiddebugkey \
+              -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+            export CARGO_APK_RELEASE_KEYSTORE="$RUNNER_TEMP/debug.keystore"
+            export CARGO_APK_RELEASE_KEYSTORE_PASSWORD=android
+          fi
+          cd mobile
+          cargo apk build --release --lib
+          cp "$(find target -name '*.apk' | head -1)" ../guitar-exercises-android-arm64.apk
+          rm -f "$RUNNER_TEMP/release.jks"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guitar-exercises-android-arm64
+          path: guitar-exercises-android-arm64.apk
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows, macos, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            guitar-exercises-linux-x86_64.tar.gz
+            guitar-exercises-windows-x86_64.zip
+            guitar-exercises-macos-arm64.tar.gz
+            guitar-exercises-android-arm64.apk

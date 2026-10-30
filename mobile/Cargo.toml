@@ -1,0 +1,44 @@
+[package]
+name = "guitar_exercises_mobile"
+# cargo-apk needs a version.
+version = "0.2.0"
+edition = "2024"
+description = "Guitar Exercises on Android"
+publish = false
+license = "Apache-2.0"
+
+# Its own workspace: cargo-apk does not take a package that is also the root of a workspace.
+[workspace]
+
+[lib]
+name = "guitar_exercises_mobile"
+# The shared library loaded by the Android activity.
+crate-type = ["cdylib"]
+
+[dependencies]
+guitar-exercises = { path = ".." }
+bevy = { version = "0.20.0", default-features = false, features = ["ui", "bevy_state"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+bevy = { version = "0.20.0", default-features = false, features = ["android-native-activity"] }
+
+[package.metadata.android]
+package = "io.github.sebosp.guitarexercises"
+apk_name = "guitar-exercises"
+# The debug symbols out: the APK is much smaller.
+strip = "strip"
+build_targets = ["aarch64-linux-android"]
+
+[package.metadata.android.sdk]
+min_sdk_version = 26
+target_sdk_version = 34
+
+# The microphone checks the notes played; the app asks for it at the first start.
+[[package.metadata.android.uses_permission]]
+name = "android.permission.RECORD_AUDIO"
+
+[package.metadata.android.application]
+label = "Guitar Exercises"
+
+[package.metadata.android.application.activity]
+orientation = "landscape"

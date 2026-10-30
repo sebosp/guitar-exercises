@@ -1,0 +1,5 @@
+[build]
+target = "index.html"
+dist = "dist"
+# Relative paths, the dist folder can be served from any sub path.
+public_url = "./"

@@ -1,0 +1,9 @@
+# mold links the native builds of Linux, the release binaries stay self-contained: they link bevy
+# statically unless the `dynamic` feature is on.
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[alias]
+# Local runs: bevy as a shared library, the incremental builds link in a moment.
+dev = "run --features dynamic"
