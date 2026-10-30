@@ -1,9 +1,74 @@
 [package]
 name = "guitar-exercises"
-version = "0.1.0"
+authors = ["Seb Ospina <kraige@gmail.com>"]
+version = "0.2.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "Finger drills and note reading for the guitar and the bass, in Bevy, checked by the microphone"
+repository = "https://github.com/sebosp/guitar-exercises"
+
+[lib]
+name = "guitar_exercises"
+
+[[bin]]
+name = "guitar-exercises"
+path = "src/main.rs"
 
 [dependencies]
-rocket = "0.4.0"
-rocket_codegen = "0.4.0"
-pitch_calc = "0.11.1"
-chords = "0.1.93"
+# No audio output yet: the microphone is read with cpal, see `audio`.
+bevy = { version = "0.20.0", default-features = false, features = ["ui", "bevy_state"] }
+fastrand = "2.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cpal = "0.17"
+
+[target.'cfg(target_os = "android")'.dependencies]
+# The same as cpal's, for the RECORD_AUDIO permission.
+jni = "0.21"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+fastrand = { version = "2.3", features = ["js"] }
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Navigator",
+    "Storage",
+    "MediaDevices",
+    "MediaStream",
+    "MediaStreamTrack",
+    "MediaStreamConstraints",
+    "AudioContext",
+    "BaseAudioContext",
+    "AudioContextState",
+    "AudioNode",
+    "AnalyserNode",
+    "MediaStreamAudioSourceNode",
+    "DomException",
+] }
+
+[features]
+default = []
+# Bevy as a shared library for fast local builds, `cargo dev`. Not for the copied binaries.
+dynamic = ["bevy/dynamic_linking"]
+
+# Small optimization for our code, full optimization for the dependencies.
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
+# trunk build --release uses this profile for the browser build, see index.html.
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+strip = "debuginfo"
