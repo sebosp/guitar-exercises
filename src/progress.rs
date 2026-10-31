@@ -97,6 +97,8 @@ pub struct InstrumentProgress {
     pub reading: BTreeMap<String, NoteStats>,
     /// "Find them all": every place of a note on the fretboard.
     pub finding: BTreeMap<String, NoteStats>,
+    /// "Find them all", every octave: every place of a letter, by its name (`C`, `F#`).
+    pub finding_octaves: BTreeMap<String, NoteStats>,
 }
 
 impl InstrumentProgress {

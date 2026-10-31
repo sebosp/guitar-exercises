@@ -24,6 +24,8 @@ pub enum Screen {
     Drill,
     Learn,
     Find,
+    /// The shapes of the fretboard, the first level of "Find them all".
+    FindTutorial,
     Settings,
     Stats,
     Help,
@@ -34,6 +36,7 @@ impl Screen {
     pub fn back(self, drill_from: &ReturnTo) -> Screen {
         match self {
             Screen::Drill => drill_from.0,
+            Screen::FindTutorial => Screen::Find,
             _ => Screen::Menu,
         }
     }
@@ -169,37 +172,21 @@ pub mod size {
 #[derive(Resource, Clone)]
 pub struct Icons {
     pub star: Handle<Image>,
+    pub gear: Handle<Image>,
 }
 
 impl FromWorld for Icons {
     fn from_world(world: &mut World) -> Self {
         let mut images = world.resource_mut::<Assets<Image>>();
-        Icons { star: images.add(star_image(64)) }
+        Icons { star: images.add(star_image(64)), gear: images.add(gear_image(64)) }
     }
 }
 
-/// A five-pointed star, white with soft edges (4x4 samples per pixel).
-fn star_image(size: u32) -> Image {
+/// A shape in white with soft edges (4x4 samples per pixel), from a test of the points of the
+/// unit square.
+fn shape_image(size: u32, inside: impl Fn(Vec2) -> bool) -> Image {
     use bevy::asset::RenderAssetUsages;
     use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
-    // The ten corners, the outer ones on a circle, the inner ones on a smaller one.
-    let corners: Vec<Vec2> = (0..10)
-        .map(|i| {
-            let angle = std::f32::consts::PI * (i as f32 / 5.0 - 0.5);
-            let radius = if i % 2 == 0 { 0.5 } else { 0.2 };
-            Vec2::new(0.5 + radius * angle.cos(), 0.53 + radius * angle.sin())
-        })
-        .collect();
-    let inside = |p: Vec2| {
-        let mut inside = false;
-        for (i, a) in corners.iter().enumerate() {
-            let b = corners[(i + 1) % corners.len()];
-            if (a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x {
-                inside = !inside;
-            }
-        }
-        inside
-    };
     let mut data = Vec::with_capacity((size * size * 4) as usize);
     for y in 0..size {
         for x in 0..size {
@@ -219,6 +206,40 @@ fn star_image(size: u32) -> Image {
         TextureFormat::Rgba8UnormSrgb,
         RenderAssetUsages::RENDER_WORLD,
     )
+}
+
+/// A five-pointed star.
+fn star_image(size: u32) -> Image {
+    // The ten corners, the outer ones on a circle, the inner ones on a smaller one.
+    let corners: Vec<Vec2> = (0..10)
+        .map(|i| {
+            let angle = std::f32::consts::PI * (i as f32 / 5.0 - 0.5);
+            let radius = if i % 2 == 0 { 0.5 } else { 0.2 };
+            Vec2::new(0.5 + radius * angle.cos(), 0.53 + radius * angle.sin())
+        })
+        .collect();
+    shape_image(size, |p| {
+        let mut inside = false;
+        for (i, a) in corners.iter().enumerate() {
+            let b = corners[(i + 1) % corners.len()];
+            if (a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x {
+                inside = !inside;
+            }
+        }
+        inside
+    })
+}
+
+/// A gear: a ring with eight teeth around a hole.
+fn gear_image(size: u32) -> Image {
+    shape_image(size, |p| {
+        let d = p - Vec2::splat(0.5);
+        let r = d.length();
+        let teeth = 8.0;
+        let phase = (d.y.atan2(d.x) / std::f32::consts::TAU * teeth).rem_euclid(1.0);
+        let outer = if (0.25..0.75).contains(&phase) { 0.48 } else { 0.36 };
+        r <= outer && r >= 0.15
+    })
 }
 
 /// Three stars, `earned` of them lit.
@@ -280,7 +301,7 @@ impl Plugin for UiPlugin {
             .init_resource::<ScrollMemory>()
             .add_systems(Update, (screen_changed, restore_scroll, remember_scroll).chain())
             .add_systems(Startup, setup)
-            .add_systems(Update, (hover_buttons, update_mic, escape_goes_back, apply_theme));
+            .add_systems(Update, (hover_buttons, update_mic, escape_goes_back, apply_theme, fill_gears));
     }
 
     /// The fonts are there before the first screen is entered, which happens before `Startup`.
@@ -425,7 +446,67 @@ pub fn spawn_top_bar(parent: &mut ChildSpawnerCommands, title: &str, screen: Scr
                     Pickable::IGNORE,
                 ));
             });
+            // The statistics, the help and the settings, from anywhere.
+            for (target, kind) in [(Screen::Stats, BarIcon::Stats), (Screen::Help, BarIcon::Help), (Screen::Settings, BarIcon::Settings)] {
+                if target == screen {
+                    continue;
+                }
+                bar.spawn((
+                    Node {
+                        width: px(40),
+                        height: px(36),
+                        border_radius: BorderRadius::all(px(6)),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::End,
+                        column_gap: px(3),
+                        padding: UiRect::bottom(px(if kind == BarIcon::Help { 2.0 } else { 9.0 })),
+                        ..default()
+                    },
+                    BackgroundColor(colors::button()),
+                    Btn { color: colors::button(), hover: colors::button_hover() },
+                    Hovered::default(),
+                ))
+                .with_children(|b| match kind {
+                    BarIcon::Stats => {
+                        for height in [9.0, 15.0, 12.0] {
+                            b.spawn((
+                                Node { width: px(5), height: px(height), ..default() },
+                                BackgroundColor(colors::text()),
+                                Pickable::IGNORE,
+                            ));
+                        }
+                    }
+                    BarIcon::Help => {
+                        b.spawn(label("?", fonts.display(size::TITLE), colors::text()));
+                    }
+                    BarIcon::Settings => {
+                        b.spawn((
+                            Node { width: px(22), height: px(22), margin: UiRect::bottom(px(-2)), ..default() },
+                            GearSlot,
+                            Pickable::IGNORE,
+                        ));
+                    }
+                })
+                .observe(move |_: On<PointerClick>, mut next: ResMut<NextState<Screen>>| next.set(target));
+            }
         });
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum BarIcon {
+    Stats,
+    Help,
+    Settings,
+}
+
+/// Where the gear of the settings goes, its image added by [`fill_gears`].
+#[derive(Component)]
+struct GearSlot;
+
+fn fill_gears(mut commands: Commands, slots: Query<Entity, Added<GearSlot>>, icons: Res<Icons>) {
+    for slot in &slots {
+        commands.entity(slot).insert(ImageNode::new(icons.gear.clone()).with_color(colors::text()));
+    }
 }
 
 fn update_mic(

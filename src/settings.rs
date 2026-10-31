@@ -44,6 +44,8 @@ pub struct Settings {
     pub daily_goal_minutes: u32,
     /// The help was shown, on the first start.
     pub help_seen: bool,
+    /// The shapes of "Find them all" were gone through once.
+    pub find_tutorial_done: bool,
 }
 
 impl Default for Settings {
@@ -88,6 +90,7 @@ impl Settings {
             zoom: 1.0,
             daily_goal_minutes: 10,
             help_seen: false,
+            find_tutorial_done: false,
         }
     }
 

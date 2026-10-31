@@ -27,6 +27,21 @@ pub struct MarksLayer {
     pub left_handed: bool,
 }
 
+/// The layer of the lines between notes, under the marks.
+#[derive(Component)]
+pub struct LinksLayer {
+    pub strings: usize,
+    pub frets: u8,
+    pub left_handed: bool,
+}
+
+/// A line from a note to another, placed by [`place_links`] once the size of the board is known.
+#[derive(Component, Clone, Copy)]
+pub struct LinkLine {
+    pub from: Position,
+    pub to: Position,
+}
+
 /// A mark that pulses, a hint.
 #[derive(Component)]
 pub struct Pulse;
@@ -68,7 +83,7 @@ pub struct FretboardPlugin;
 
 impl Plugin for FretboardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<FretTapped>().add_systems(Update, pulse);
+        app.add_message::<FretTapped>().add_systems(Update, (pulse, place_links));
     }
 }
 
@@ -230,6 +245,11 @@ fn spawn_board(board: &mut ChildSpawnerCommands, instrument: &Instrument, left_h
     }
     board.spawn((
         Node { position_type: PositionType::Absolute, width: percent(100), height: percent(100), ..default() },
+        LinksLayer { strings, frets, left_handed },
+        Pickable::IGNORE,
+    ));
+    board.spawn((
+        Node { position_type: PositionType::Absolute, width: percent(100), height: percent(100), ..default() },
         MarksLayer { strings, frets, left_handed },
         Pickable::IGNORE,
     ));
@@ -267,6 +287,51 @@ pub fn set_marks(commands: &mut Commands, layer: (Entity, &MarksLayer), marks: &
         ));
         if mark.pulse {
             spawned.insert(Pulse);
+        }
+    }
+}
+
+/// Replaces the lines between notes.
+pub fn set_links(commands: &mut Commands, layer: Entity, links: &[(Position, Position)], color: Color) {
+    commands.entity(layer).despawn_children();
+    for &(from, to) in links {
+        commands.spawn((
+            Node { position_type: PositionType::Absolute, height: px(4), border_radius: BorderRadius::all(px(2)), ..default() },
+            BackgroundColor(color),
+            UiTransform::default(),
+            LinkLine { from, to },
+            Pickable::IGNORE,
+            ChildOf(layer),
+        ));
+    }
+}
+
+/// The lines from the middle of a note to the middle of the other, in the pixels of the board.
+fn place_links(layers: Query<(&LinksLayer, &ComputedNode, &Children)>, mut lines: Query<(&LinkLine, &mut Node, &mut UiTransform)>) {
+    for (layer, computed, children) in &layers {
+        let size = computed.size() * computed.inverse_scale_factor;
+        let at = |p: Position| {
+            Vec2::new(
+                fret_center_x(p.fret, layer.frets, layer.left_handed) / 100.0 * size.x,
+                string_center_y(p.string, layer.strings) / 100.0 * size.y,
+            )
+        };
+        for child in children.iter() {
+            let Ok((link, mut node, mut transform)) = lines.get_mut(child) else { continue };
+            let (a, b) = (at(link.from), at(link.to));
+            let length = a.distance(b);
+            let middle = (a + b) / 2.0;
+            let left = px(middle.x - length / 2.0);
+            let top = px(middle.y - 2.0);
+            if node.left != left || node.top != top || node.width != px(length) {
+                node.left = left;
+                node.top = top;
+                node.width = px(length);
+            }
+            let rotation = Rot2::radians((b - a).to_angle());
+            if transform.rotation != rotation {
+                transform.rotation = rotation;
+            }
         }
     }
 }

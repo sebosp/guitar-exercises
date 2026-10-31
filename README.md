@@ -64,7 +64,8 @@ the notes of the scale in every order, like the fingers: windows of 2, 3 or 4 no
 
 ### Statistics and help
 
-As in claudralingo: the streak of days with the daily goal of minutes met (10 by default, the
+The statistics, the help and the settings have their buttons on top of every screen. As in
+claudralingo: the streak of days with the daily goal of minutes met (10 by default, the
 minutes counted between the notes played), today, the notes a minute and the accuracy of the last
 30 days, the calendars of two months, the rounds by type, then every drill and note. The help
 opens on the first start, from the menu and with F1.
@@ -113,9 +114,17 @@ The mnemonics, from the bottom:
 
 ### Find them all
 
-A note on the staff: tap every place it is on the fretboard. The notes are the ones learned in
-"Learn notes" (the first five at least), the ones with mistakes or slow answers more often. A pause
-shows the letters of the staff, then the places left one by one.
+Three levels, the letters of the lines and the spaces always next to the staff:
+
+1. The shapes, a tutorial: the same note on the next string (5 frets back, 4 to the B string),
+   the octave two strings and two frets up (three across the B string), three strings up and
+   three frets down, twelve frets up the string, then every C together. The shapes come from the
+   tuning; the notes are linked by lines on the fretboard and played out loud, and the first time
+   each one is tapped before the next page. It opens the first time and stays reachable.
+2. Every octave: a letter, all its octaves on the staff, every place of all of them.
+3. One octave, after 5 notes found in every octave: a note on the staff, every place of it. The
+   notes are the ones learned in "Learn notes" (the first five at least), the ones with mistakes
+   or slow answers more often.
 
 ### Settings and statistics
 

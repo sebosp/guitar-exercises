@@ -920,7 +920,7 @@ fn render(
         draw_staff(
             &mut commands,
             staff,
-            &StaffDrawing { note: sounding.map(Spelled::written), color, letters: Default::default() },
+            &StaffDrawing { note: sounding.map(Spelled::written), more: vec![], color, letters: Default::default() },
             &fonts,
         );
     }

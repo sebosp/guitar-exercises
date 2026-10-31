@@ -25,7 +25,7 @@ fn main() {
 /// `GE_SCREENSHOT=out.png` opens a screen, plays a few notes by itself, saves a screenshot and
 /// exits, to check the screens without a person at the instrument:
 ///
-/// - `GE_SCREEN`: menu, drills, scales, drill, learn, find, settings, stats, help or songs;
+/// - `GE_SCREEN`: menu, drills, scales, drill, learn, find, shapes, settings, stats, help or songs;
 /// - `GE_LEVEL`: the drill, by its place on the drills page, or `GE_EXERCISE` by its key;
 /// - `GE_PLAY`: the notes played right (heard by the "microphone"), `GE_TAP` tapped right,
 ///   `GE_MISS` wrong notes heard;
@@ -81,6 +81,7 @@ mod snapshot {
             "drill" => Screen::Drill,
             "learn" => Screen::Learn,
             "find" => Screen::Find,
+            "shapes" => Screen::FindTutorial,
             "settings" => Screen::Settings,
             "stats" => Screen::Stats,
             "help" => Screen::Help,

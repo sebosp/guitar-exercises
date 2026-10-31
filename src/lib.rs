@@ -19,6 +19,7 @@ pub mod progress;
 pub mod scales;
 pub mod screens;
 pub mod settings;
+pub mod shapes;
 pub mod song;
 pub mod staff;
 pub mod storage;

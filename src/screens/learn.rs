@@ -279,7 +279,7 @@ fn render(
     let letters = if introducing || learn.hint >= 1 || showing { Letters::All } else { Letters::None };
     let color = if showing { Some(colors::ok()) } else { None };
     if let Ok(staff) = staffs.single() {
-        draw_staff(&mut commands, staff, &StaffDrawing { note: Some(written), color, letters }, &fonts);
+        draw_staff(&mut commands, staff, &StaffDrawing { note: Some(written), more: vec![], color, letters }, &fonts);
     }
     if let Ok(layer) = layers.single() {
         let reveal = introducing || showing || learn.hint >= 3;

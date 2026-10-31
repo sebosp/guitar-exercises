@@ -53,19 +53,59 @@ pub struct MetronomePlugin;
 
 impl Plugin for MetronomePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Metronome>().init_resource::<Speaker>().add_systems(Update, drive);
+        app.init_resource::<Metronome>().init_resource::<Speaker>().add_message::<PlayNote>().add_systems(Update, drive);
     }
 }
 
-fn drive(metronome: Res<Metronome>, mut speaker: ResMut<Speaker>, time: Res<Time<Real>>) {
+/// A note to play out loud, plucked, `delay` seconds from now: the examples of the tutorials.
+#[derive(Message, Debug, Clone, Copy)]
+pub struct PlayNote {
+    pub midi: i32,
+    pub delay: f32,
+}
+
+fn drive(metronome: Res<Metronome>, mut speaker: ResMut<Speaker>, time: Res<Time<Real>>, mut notes: MessageReader<PlayNote>) {
     let audible = metronome.on && metronome.sound;
-    if audible && speaker.0.is_none() {
+    let notes: Vec<PlayNote> = notes.read().copied().filter(|_| metronome.sound).collect();
+    if (audible || !notes.is_empty()) && speaker.0.is_none() {
         speaker.0 = Some(output::Output::start());
     }
     if let Some(output) = speaker.0.as_mut() {
         let bpm = if audible { metronome.bpm } else { 0 };
         output.sync(bpm, metronome.generation, metronome.start, time.elapsed_secs_f64());
+        for note in notes {
+            output.pluck(note.midi, note.delay);
+        }
     }
+}
+
+/// A plucked string, Karplus-Strong: a burst of noise in a delay line of the period of the
+/// note, averaged on each turn, fading in about a second.
+pub fn pluck(rate: f32, midi: i32) -> Vec<f32> {
+    let hz = crate::music::midi_to_hz(midi as f32);
+    let period = (rate / hz).round().max(2.0) as usize;
+    let mut noise = 0x2545_f491u32;
+    let mut line: Vec<f32> = (0..period)
+        .map(|_| {
+            noise ^= noise << 13;
+            noise ^= noise >> 17;
+            noise ^= noise << 5;
+            noise as f32 / u32::MAX as f32 * 2.0 - 1.0
+        })
+        .collect();
+    let length = (rate * 1.4) as usize;
+    let fade = (rate * 0.08) as usize;
+    let mut out = Vec::with_capacity(length);
+    let mut i = 0;
+    for n in 0..length {
+        let next = (i + 1) % period;
+        let value = 0.497 * (line[i] + line[next]);
+        line[i] = value;
+        i = next;
+        let tail = if n + fade > length { (length - n) as f32 / fade as f32 } else { 1.0 };
+        out.push(value * 0.35 * tail);
+    }
+    out
 }
 
 /// The samples of the clicks: the beats counted at the sample rate, so the clicks are exactly in
@@ -153,6 +193,8 @@ mod output {
         bpm: AtomicU32,
         generation: AtomicU32,
         stop: AtomicBool,
+        /// The notes to pluck and their delay in seconds.
+        notes: std::sync::Mutex<Vec<(i32, f32)>>,
     }
 
     /// The output stream runs on its own thread, which owns it (not `Send` everywhere).
@@ -178,6 +220,12 @@ mod output {
         pub fn sync(&mut self, bpm: u32, generation: u32, _start: f64, _now: f64) {
             self.shared.bpm.store(bpm, Ordering::Relaxed);
             self.shared.generation.store(generation, Ordering::Relaxed);
+        }
+
+        pub fn pluck(&mut self, midi: i32, delay: f32) {
+            if let Ok(mut notes) = self.shared.notes.lock() {
+                notes.push((midi, delay));
+            }
         }
     }
 
@@ -221,15 +269,32 @@ mod output {
     {
         let shared = shared.clone();
         let mut clicker = Clicker::new(rate);
+        // The notes sounding: their samples, and the samples played (negative: not started).
+        let mut voices: Vec<(Vec<f32>, i64)> = Vec::new();
         device
             .build_output_stream(
                 config,
                 move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
                     clicker.set(shared.bpm.load(Ordering::Relaxed), shared.generation.load(Ordering::Relaxed));
+                    if let Ok(mut notes) = shared.notes.try_lock() {
+                        for (midi, delay) in notes.drain(..) {
+                            voices.push((super::pluck(rate, midi), -((delay * rate) as i64)));
+                        }
+                    }
                     for frame in data.chunks_mut(channels.max(1)) {
-                        let sample = T::from_sample(clicker.next_sample());
+                        let mut value = clicker.next_sample();
+                        for (samples, at) in voices.iter_mut() {
+                            if *at >= 0
+                                && let Some(v) = samples.get(*at as usize)
+                            {
+                                value += v;
+                            }
+                            *at += 1;
+                        }
+                        let sample = T::from_sample(value.clamp(-1.0, 1.0));
                         frame.iter_mut().for_each(|s| *s = sample);
                     }
+                    voices.retain(|(samples, at)| *at < samples.len() as i64);
                 },
                 |err| warn!("Metronome: {err}"),
                 None,
@@ -280,6 +345,23 @@ mod output {
             CLICKS.with_borrow_mut(|web| {
                 if let Some(web) = web.as_mut() {
                     web.sync(bpm, generation, start, now);
+                }
+            });
+        }
+
+        pub fn pluck(&mut self, midi: i32, delay: f32) {
+            CLICKS.with_borrow_mut(|web| {
+                let Some(web) = web.as_mut() else { return };
+                let context = &web.context;
+                if context.state() == AudioContextState::Suspended {
+                    let _ = context.resume();
+                }
+                let rate = context.sample_rate();
+                let samples = super::pluck(rate, midi);
+                if let Ok(buffer) = context.create_buffer(1, samples.len() as u32, rate)
+                    && buffer.copy_to_channel(&samples, 0).is_ok()
+                {
+                    play(context, &buffer, context.current_time() + delay as f64);
                 }
             });
         }
@@ -372,6 +454,16 @@ mod tests {
         clicker.set(60, 2);
         let restart: Vec<f32> = (0..40).map(|_| clicker.next_sample()).collect();
         assert!(restart.iter().any(|s| s.abs() > 0.05));
+    }
+
+    #[test]
+    fn plucks() {
+        let a = pluck(8000.0, 57);
+        assert_eq!(a.len(), (8000.0 * 1.4) as usize);
+        // Loud at first, quiet at the end.
+        let energy = |s: &[f32]| s.iter().map(|v| v * v).sum::<f32>();
+        assert!(energy(&a[..800]) > 10.0 * energy(&a[a.len() - 800..]));
+        assert!(a.iter().all(|v| v.abs() <= 0.36));
     }
 
     #[test]
