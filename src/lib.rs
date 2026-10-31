@@ -23,6 +23,7 @@ pub mod tempo;
 pub mod theme;
 pub mod tuner;
 pub mod ui;
+pub mod zoom;
 
 pub struct GuitarExercisesPlugin;
 
@@ -33,6 +34,7 @@ impl Plugin for GuitarExercisesPlugin {
             audio::AudioInputPlugin,
             metronome::MetronomePlugin,
             tuner::TunerPlugin,
+            zoom::ZoomPlugin,
             fretboard::FretboardPlugin,
             screens::ScreensPlugin,
         ));

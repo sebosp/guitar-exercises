@@ -8,13 +8,14 @@ use crate::music::{InstrumentKind, RETUNE_RANGE, TuningPreset, midi_name};
 use crate::settings::Settings;
 use crate::theme::Theme;
 use crate::ui::{Btn, Fonts, Screen, button, button_frame, colors, label, screen_root, scroll_area, small_button, spawn_top_bar};
+use crate::zoom::Zoom;
 
 pub struct SettingsScreenPlugin;
 
 impl Plugin for SettingsScreenPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(Screen::Settings), spawn)
-            .add_systems(Update, (refresh, refresh_strings).run_if(in_state(Screen::Settings)));
+            .add_systems(Update, (refresh, refresh_strings, show_zoom).run_if(in_state(Screen::Settings)));
     }
 }
 
@@ -37,6 +38,10 @@ struct StringName(usize);
 /// The note of a string and its offset from the standard tuning.
 #[derive(Component)]
 struct StringNote(usize);
+
+/// The zoom in percent.
+#[derive(Component)]
+struct ZoomText;
 
 /// A theme button, highlighted when it is the theme.
 #[derive(Component)]
@@ -174,6 +179,27 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
                     );
                 }
             });
+
+            row(list, "Zoom", fonts).with_children(|r| {
+                r.spawn(small_button("-", fonts)).observe(|_: On<PointerClick>, mut zoom: MessageWriter<Zoom>| {
+                    zoom.write(Zoom::OUT);
+                });
+                r.spawn((Node { min_width: px(70), justify_content: JustifyContent::Center, ..default() }, children![(
+                    label("", fonts.bold(18.0), colors::accent()),
+                    ZoomText
+                )]));
+                r.spawn(small_button("+", fonts)).observe(|_: On<PointerClick>, mut zoom: MessageWriter<Zoom>| {
+                    zoom.write(Zoom::IN);
+                });
+                r.spawn(button("Fit the window", fonts, colors::button())).observe(|_: On<PointerClick>, mut zoom: MessageWriter<Zoom>| {
+                    zoom.write(Zoom::Reset);
+                });
+            });
+            list.spawn(label(
+                "Or Ctrl and the mouse wheel, a pinch of the trackpad, Ctrl+= Ctrl+- Ctrl+0. F11: full screen, to read it from the instrument.",
+                fonts.text(15.0),
+                colors::dim(),
+            ));
 
             list.spawn(label("Microphone", fonts.bold(20.0), colors::accent()));
             toggle(list, "Listen to the instrument", fonts, |s| s.microphone, |s| s.microphone = !s.microphone);
@@ -342,6 +368,15 @@ fn refresh(
         };
         if text.0 != shown {
             text.0 = shown;
+        }
+    }
+}
+
+fn show_zoom(scale: Res<UiScale>, mut texts: Query<&mut Text, With<ZoomText>>) {
+    let shown = crate::zoom::percent(scale.0);
+    for mut text in &mut texts {
+        if text.0 != shown {
+            text.0 = shown.clone();
         }
     }
 }

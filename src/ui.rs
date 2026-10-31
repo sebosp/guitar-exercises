@@ -229,7 +229,7 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<Screen>()
             .add_systems(Startup, setup)
-            .add_systems(Update, (hover_buttons, update_mic, escape_goes_back, scale_to_window, apply_theme));
+            .add_systems(Update, (hover_buttons, update_mic, escape_goes_back, apply_theme));
     }
 
     /// The fonts are there before the first screen is entered, which happens before `Startup`.
@@ -269,19 +269,6 @@ fn apply_theme(
         camera.clear_color = ClearColorConfig::Custom(colors::bg());
     }
     next.set(*screen.get());
-}
-
-/// Narrower windows (phones) scale the interface down a little, by the width only: the screens
-/// are laid out for about 1150 logical pixels across, scroll down, and wrap their rows; under 75%
-/// the text would be too small to read on a phone held sideways.
-fn scale_to_window(windows: Query<&Window, Changed<Window>>, mut scale: ResMut<UiScale>) {
-    let Some(window) = windows.iter().next() else {
-        return;
-    };
-    let fit = (window.width() / 1150.0).clamp(0.75, 1.0);
-    if (scale.0 - fit).abs() > 0.01 {
-        scale.0 = fit;
-    }
 }
 
 fn hover_buttons(mut buttons: Query<(&Hovered, &Btn, &mut BackgroundColor), Changed<Hovered>>) {
@@ -416,13 +403,18 @@ fn update_mic(
     }
 }
 
-/// The wheel scrolls the [`Scrollable`] under the pointer, a drag (a finger) too.
+/// The wheel scrolls the [`Scrollable`] under the pointer, a drag (a finger) too; not with Ctrl.
 pub fn scroll_on_wheel(
     mut scroll: On<PointerScroll>,
     ratio: Res<MouseScrollPixelsPerLine>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut areas: Query<(&ComputedNode, &mut ScrollPosition), With<Scrollable>>,
 ) {
     scroll.propagate(false);
+    // With Ctrl the wheel zooms, see `crate::zoom`.
+    if crate::zoom::ctrl_held(&keys) {
+        return;
+    }
     let delta = scroll.to_pixels(&ratio);
     if let Ok((node, mut position)) = areas.get_mut(scroll.entity) {
         scroll_by(node, &mut position, -delta.y);

@@ -105,6 +105,11 @@ strings, the hint delay, the drill length, the note names in the drills, the sha
 right answers that clear a note. The statistics show every drill played and every note with its
 accuracy, its time to answer and the hints.
 
+The window is scaled to fit its size (a big screen or the full screen shows everything bigger, a
+phone not under 75%), and zoomed over that with Ctrl and the mouse wheel, a pinch of the trackpad,
+Ctrl+= Ctrl+- Ctrl+0 or the buttons of the settings: to read it from the instrument a few steps
+away. F11 toggles the full screen.
+
 The settings and the progress are saved on the device: `~/.config/guitar-exercises/` on Linux,
 `~/Library/Application Support/guitar-exercises/` on macOS, `%APPDATA%\guitar-exercises\` on
 Windows, the app storage on Android, the `localStorage` of the browser on the web. The progress is

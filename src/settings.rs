@@ -38,6 +38,8 @@ pub struct Settings {
     pub theme: crate::theme::Theme,
     /// The scale of the scale exercises.
     pub scale: crate::scales::Scale,
+    /// The zoom over the scale that fits the window, see [`crate::zoom`].
+    pub zoom: f32,
 }
 
 impl Default for Settings {
@@ -79,6 +81,7 @@ impl Settings {
             notes_per_beat: 1,
             theme: crate::theme::Theme::Dark,
             scale: crate::scales::Scale::default(),
+            zoom: 1.0,
         }
     }
 
@@ -119,6 +122,10 @@ impl Settings {
         self.clear_streak = self.clear_streak.clamp(1, 10);
         self.notes_per_beat = self.notes_per_beat.clamp(1, 4);
         self.scale = self.scale.sanitized();
+        if !self.zoom.is_finite() {
+            self.zoom = 1.0;
+        }
+        self.zoom = self.zoom.clamp(crate::zoom::MIN_ZOOM / 3.0, crate::zoom::MAX_ZOOM / 0.75);
     }
 
     pub fn load() -> Self {
