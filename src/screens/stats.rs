@@ -106,7 +106,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>, pro
                     .collect();
                 for key in record.exercises.keys() {
                     if catalog.find(key).is_none() {
-                        keys.push((key.clone(), key.replace('/', " · ")));
+                        keys.push((key.clone(), key.replace('/', ", ")));
                     }
                 }
                 for (key, name) in keys {
@@ -121,7 +121,11 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>, pro
                             (percent_text(d.best_accuracy), 70.0, accuracy_color(Some(d.best_accuracy))),
                             (percent_text(d.last_accuracy), 70.0, accuracy_color(Some(d.last_accuracy))),
                             (format!("{:.0}", d.best_notes_per_minute), 90.0, colors::text()),
-                            (tier.map_or("-".into(), |t| t.name().to_string()), 100.0, tier.map_or(colors::dim(), |t| t.color())),
+                            (
+                                tier.map_or("-".into(), |t| t.name().to_string()),
+                                100.0,
+                                if tier.is_some() { colors::text() } else { colors::dim() },
+                            ),
                         ],
                         fonts,
                         false,

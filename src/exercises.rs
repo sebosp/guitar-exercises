@@ -198,7 +198,7 @@ pub fn catalog(instrument: &Instrument, scale: Scale) -> Catalog {
                 .map(|order| Exercise {
                     key: finger_key(i, order),
                     kind: Kind::Finger { shape: i, order },
-                    name: format!("{} · {}", shape.name, order_name(&order)),
+                    name: format!("{}, {}", shape.name, order_name(&order)),
                     label: order_name(&order),
                 })
                 .collect(),
@@ -210,7 +210,7 @@ pub fn catalog(instrument: &Instrument, scale: Scale) -> Catalog {
                 .map(|group| Exercise {
                     key: format!("scale/{}/skip{skip}/in{group}", scale.key()),
                     kind: Kind::Scale { group, skip },
-                    name: format!("{} · {} · {}", scale.name(), skip_name(skip), group_name(group)),
+                    name: format!("{}, {}, {}", scale.name(), skip_name(skip).to_lowercase(), group_name(group).to_lowercase()),
                     label: group_name(group),
                 })
                 .collect()
@@ -227,7 +227,7 @@ pub fn catalog(instrument: &Instrument, scale: Scale) -> Catalog {
                     Exercise {
                         key: format!("scale/{}/perm{}", scale.key(), permutation_name(&o)),
                         kind: Kind::Permutation { order, len },
-                        name: format!("{} · in the order {}", scale.name(), permutation_name(&o)),
+                        name: format!("{} in the order {}", scale.name(), permutation_name(&o)),
                         label: permutation_name(&o),
                     }
                 })
@@ -248,7 +248,7 @@ pub fn catalog(instrument: &Instrument, scale: Scale) -> Catalog {
             .map(|gap| Exercise {
                 key: format!("gaps/{gap}"),
                 kind: Kind::Gaps { gap },
-                name: format!("Growing gaps · {gap} frets apart"),
+                name: format!("Fingers {gap} frets apart"),
                 label: format!("Gaps of {gap}"),
             })
             .collect()
@@ -259,7 +259,7 @@ pub fn catalog(instrument: &Instrument, scale: Scale) -> Catalog {
             .map(|growth| Exercise {
                 key: format!("shifts/{growth}"),
                 kind: Kind::Shifts { growth },
-                name: format!("Growing shifts · jumps growing by {growth}"),
+                name: format!("Shifts growing by {growth} frets"),
                 label: format!("Shifts +{growth}"),
             })
             .collect()

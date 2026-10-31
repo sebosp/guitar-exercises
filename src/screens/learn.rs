@@ -328,7 +328,7 @@ fn render(
     let total = learn.scheduler.order.len();
     let progress_text = match learn.scheduler.new_note() {
         Some(new) => format!(
-            "{} of {} notes learned · {} right in a row on {} ({} needed)",
+            "{} of {} notes learned. {} right in a row on {}, {} needed.",
             learn.scheduler.learned,
             total,
             learn.scheduler.streak,

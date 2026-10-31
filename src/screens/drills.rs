@@ -12,7 +12,8 @@ use crate::scales::{ROOT_NAMES, ScaleFamily};
 use crate::settings::Settings;
 use crate::tempo::{Tier, tempo_of};
 use crate::ui::{
-    Fonts, Icons, ReturnTo, Screen, button, button_frame, colors, label, screen_root, scroll_area, small_button, spawn_stars, spawn_top_bar,
+    Fonts, Icons, ReturnTo, Screen, button, button_frame, colors, label, screen_root, scroll_area, size, small_button, spawn_stars,
+    spawn_top_bar,
 };
 
 /// The exercise to play, by its key.
@@ -74,46 +75,21 @@ fn spawn(mut p: PageParams, page: Page) {
         spawn_top_bar(root, title, screen, fonts);
         root.spawn(scroll_area()).observe(crate::ui::scroll_on_wheel).observe(crate::ui::scroll_on_drag).with_children(|list| {
             spawn_header(list, &catalog, &record, page, &notice, fonts, icons);
-            if page == Page::Drills {
-                list.spawn(button("Scales: runs, sequences and orders of the notes  >", fonts, colors::button())).insert(Node {
-                    align_self: AlignSelf::Start,
-                    padding: UiRect::axes(px(16), px(9)),
-                    border_radius: BorderRadius::all(px(8)),
-                    ..default()
-                })
-                .observe(|_: On<PointerClick>, mut next: ResMut<NextState<Screen>>| next.set(Screen::Scales));
-            }
             for section in Section::ALL.into_iter().filter(|s| s.page() == page) {
                 let rows: Vec<&Row> = catalog.rows.iter().filter(|r| r.section == section).collect();
                 if section.is_extra() && !catalog.extra_revealed(&record) {
                     spawn_extra_teaser(list, &record, fonts);
                     continue;
                 }
-                list.spawn(Node { height: px(6), ..default() });
-                list.spawn(label(section.name(), fonts.bold(24.0), colors::text()));
+                // The first section is what the page is about: its title is the page's.
+                if !matches!(section, Section::Fingers | Section::Scales) {
+                    list.spawn(Node { height: px(6), ..default() });
+                    list.spawn(label(section.name(), fonts.display(size::TITLE), colors::text()));
+                }
                 match section {
-                    Section::Fingers => {
-                        list.spawn(label(
-                            "The four fingers in every order: up the strings, one fret higher, back down. The orders that loop into each other (1-2-3-4, 2-3-4-1, 3-4-1-2, 4-1-2-3) are one drill.",
-                            fonts.text(15.0),
-                            colors::dim(),
-                        ));
-                        spawn_finger_legend(list, fonts);
-                    }
+                    Section::Fingers => spawn_finger_legend(list, fonts),
                     Section::Scales => spawn_scale_picker(list, settings, fonts),
-                    Section::Stretches => {
-                        list.spawn(label(
-                            "Growing gaps: the four fingers 2 frets apart, then wider in the extra exercises. Growing shifts: one finger per fret moving up the neck by jumps that grow, back down on the next string.",
-                            fonts.text(15.0),
-                            colors::dim(),
-                        ));
-                    }
-                    Section::Extra => {
-                        list.spawn(label("Wider gaps, bigger shifts.", fonts.text(15.0), colors::dim()));
-                    }
-                    Section::ScaleExtra => {
-                        list.spawn(label("The scale skipping 3 strings and more: more than four strings apart.", fonts.text(15.0), colors::dim()));
-                    }
+                    _ => {}
                 }
                 if section == Section::Scales && rows.is_empty() {
                     list.spawn(label("This scale does not fit on the frets of the instrument.", fonts.text(15.0), colors::bad()));
@@ -151,7 +127,7 @@ fn spawn_header(
                     Node { width: px(26), height: px(26), ..default() },
                     ImageNode::new(icons.star.clone()).with_color(crate::ui::STAR),
                 ));
-                stars.spawn(label(record.total_stars().to_string(), fonts.bold(22.0), colors::text()));
+                stars.spawn(label(record.total_stars().to_string(), fonts.display(size::TITLE), colors::text()));
             });
         row.spawn(button("Practice the weakest", fonts, colors::selected())).observe(
             move |_: On<PointerClick>,
@@ -195,31 +171,6 @@ fn spawn_header(
     if !notice.is_empty() {
         list.spawn(label(notice, fonts.bold(17.0), colors::accent()));
     }
-    list.spawn(label(
-        "A star for 80% of the notes right, two for 90%, three for all of them; a star opens the next level. The border is the fastest clean round with the metronome, in notes per minute (the tempo times the notes per beat):",
-        fonts.text(15.0),
-        colors::dim(),
-    ));
-    list.spawn(Node { flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap, column_gap: px(8), row_gap: px(6), ..default() })
-        .with_children(|row| {
-            for tier in Tier::ALL {
-                let text = match tier {
-                    Tier::Basic => "Basic: a clean round".to_string(),
-                    t => format!("{}: {}+", t.name(), t.threshold()),
-                };
-                row.spawn((
-                    Node {
-                        padding: UiRect::axes(px(10), px(4)),
-                        border: UiRect::all(px(3)),
-                        border_radius: BorderRadius::all(px(8)),
-                        ..default()
-                    },
-                    BorderColor::all(tier.color()),
-                    BackgroundColor(colors::button()),
-                    children![label(text, fonts.text(14.0), colors::text())],
-                ));
-            }
-        });
 }
 
 fn spawn_extra_teaser(list: &mut ChildSpawnerCommands, record: &InstrumentProgress, fonts: &Fonts) {
@@ -348,7 +299,7 @@ fn spawn_row(
     .insert(BorderColor::all(colors::button()))
     .with_children(|r| {
         r.spawn(Node { width: px(NAME_COLUMN), flex_shrink: 0.0, ..default() }).with_children(|c| {
-            c.spawn(label(&row.title, fonts.bold(16.0), colors::accent()));
+            c.spawn(label(&row.title, fonts.display(size::HEADING), colors::accent()));
         });
         // The shape of a finger drill or a gap, drawn.
         let shape = match row.exercises.first().map(|e| e.kind) {
@@ -390,25 +341,20 @@ fn spawn_tile(
     let drill = record.exercises.get(&exercise.key);
     let tier = drill.and_then(Tier::of);
     let color = if unlocked { colors::button() } else { colors::locked() };
-    let border = tier.map(Tier::color).unwrap_or(color);
     let key = exercise.key.clone();
     grid.spawn(button_frame(color))
-        .insert((
-            Node {
-                width: px(TILE),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Center,
-                row_gap: px(2),
-                padding: UiRect::axes(px(4), px(4)),
-                border: UiRect::all(px(3)),
-                border_radius: BorderRadius::all(px(10)),
-                ..default()
-            },
-            BorderColor::all(border),
-        ))
+        .insert((Node {
+            width: px(TILE),
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            row_gap: px(2),
+            padding: UiRect::axes(px(4), px(4)),
+            border_radius: BorderRadius::all(px(10)),
+            ..default()
+        },))
         .with_children(|tile| {
             let text_color = if unlocked { colors::text() } else { colors::dim() };
-            tile.spawn(label(&exercise.label, fonts.bold(16.0), text_color));
+            tile.spawn(label(&exercise.label, fonts.display(19.0), text_color));
             match exercise.kind {
                 Kind::Scale { group, .. } => {
                     tile.spawn(label(group_example(group), fonts.text(12.0), colors::dim()));
@@ -432,9 +378,15 @@ fn spawn_tile(
                 _ => "new".to_string(),
             };
             tile.spawn(label(detail, fonts.text(12.0), colors::dim()));
-            // The tier in words: the border is not the only sign of it.
             if let Some(tier) = tier {
-                tile.spawn(label(tier.name(), fonts.bold(12.0), colors::text()));
+                tile.spawn((
+                    Node { flex_direction: FlexDirection::Row, align_items: AlignItems::Center, column_gap: px(5), ..default() },
+                    Pickable::IGNORE,
+                ))
+                .with_children(|line| {
+                    spawn_tier_pips(line, tier);
+                    line.spawn(label(tier.name(), fonts.bold(12.0), colors::text()));
+                });
             }
         })
         .observe(
@@ -449,4 +401,21 @@ fn spawn_tile(
                 }
             },
         );
+}
+
+/// The tier as rank pips: one to four diamonds, in the text color, no hue that a finger has.
+pub fn spawn_tier_pips(parent: &mut ChildSpawnerCommands, tier: Tier) {
+    let rank = Tier::ALL.iter().position(|t| *t == tier).unwrap_or(0) + 1;
+    parent.spawn((Node { flex_direction: FlexDirection::Row, column_gap: px(3), ..default() }, Pickable::IGNORE)).with_children(|pips| {
+        for n in 0..Tier::ALL.len() {
+            let lit = n < rank;
+            pips.spawn((
+                Node { width: px(6), height: px(6), border: UiRect::all(px(1)), ..default() },
+                BackgroundColor(if lit { colors::text() } else { Color::NONE }),
+                BorderColor::all(colors::text().with_alpha(if lit { 1.0 } else { 0.45 })),
+                UiTransform { rotation: Rot2::degrees(45.0), ..default() },
+                Pickable::IGNORE,
+            ));
+        }
+    });
 }

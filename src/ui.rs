@@ -127,6 +127,9 @@ pub struct Fonts {
     pub bold: Handle<Font>,
     /// Noto Music: the clefs, the sharps and the flats.
     pub music: Handle<Font>,
+    /// Barlow Condensed SemiBold: the titles, the labels and the numbers, drawn for road signs
+    /// read from afar as the screen is from the instrument.
+    pub display: Handle<Font>,
 }
 
 impl Fonts {
@@ -138,9 +141,25 @@ impl Fonts {
         TextFont { font: FontSource::Handle(self.bold.clone()), font_size: FontSize::Px(size), ..default() }
     }
 
+    pub fn display(&self, size: f32) -> TextFont {
+        TextFont { font: FontSource::Handle(self.display.clone()), font_size: FontSize::Px(size), ..default() }
+    }
+
     pub fn music(&self, size: f32) -> TextFont {
         TextFont { font: FontSource::Handle(self.music.clone()), font_size: FontSize::Px(size), ..default() }
     }
+}
+
+/// The type scale, about 1.25 apart: the captions, the text, the lead text, the headings, the
+/// titles, the numbers, the note to play.
+pub mod size {
+    pub const CAPTION: f32 = 13.0;
+    pub const TEXT: f32 = 15.0;
+    pub const LEAD: f32 = 17.0;
+    pub const HEADING: f32 = 21.0;
+    pub const TITLE: f32 = 27.0;
+    pub const NUMBER: f32 = 34.0;
+    pub const HERO: f32 = 44.0;
 }
 
 /// The icons drawn by the game: a star, white, tinted by [`ImageNode::color`].
@@ -275,6 +294,7 @@ impl FromWorld for Fonts {
             regular: load(include_bytes!("../assets/fonts/FiraSans-Regular.ttf")),
             bold: load(include_bytes!("../assets/fonts/FiraSans-Bold.ttf")),
             music: load(include_bytes!("../assets/fonts/NotoMusic-Regular.ttf")),
+            display: load(include_bytes!("../assets/fonts/BarlowCondensed-SemiBold.ttf")),
         }
     }
 }
@@ -323,7 +343,7 @@ pub fn button_frame(color: Color) -> impl Bundle {
     (
         Node {
             padding: UiRect::axes(px(16), px(9)),
-            border_radius: BorderRadius::all(px(8)),
+            border_radius: BorderRadius::all(px(6)),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
@@ -386,7 +406,7 @@ pub fn spawn_top_bar(parent: &mut ChildSpawnerCommands, title: &str, screen: Scr
                     },
                 );
             }
-            bar.spawn(label(title, fonts.bold(22.0), colors::text()));
+            bar.spawn(label(title, fonts.display(size::TITLE), colors::text()));
             bar.spawn(Node { flex_grow: 1.0, ..default() });
             bar.spawn((label("", fonts.text(15.0), colors::dim()), MicText));
             bar.spawn((

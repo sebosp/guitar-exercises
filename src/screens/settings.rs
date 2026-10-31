@@ -122,7 +122,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
     commands.spawn(screen_root(Screen::Settings)).with_children(|root| {
         spawn_top_bar(root, "Settings", Screen::Settings, fonts);
         root.spawn(scroll_area()).observe(crate::ui::scroll_on_wheel).observe(crate::ui::scroll_on_drag).with_children(|list| {
-            list.spawn(label("Instrument", fonts.bold(20.0), colors::accent()));
+            list.spawn(label("Instrument", fonts.display(crate::ui::size::TITLE), colors::accent()));
             choices(
                 list,
                 "Instrument",
@@ -179,7 +179,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             stepper(list, "Frets", fonts, |s| s.frets.to_string(), |s| s.frets = s.frets.saturating_sub(1), |s| s.frets += 1);
             toggle(list, "Left-handed", fonts, |s| s.left_handed, |s| s.left_handed = !s.left_handed);
 
-            list.spawn(label("Look", fonts.bold(20.0), colors::accent()));
+            list.spawn(label("Look", fonts.display(crate::ui::size::TITLE), colors::accent()));
             row(list, "Theme", fonts).with_children(|r| {
                 for theme in Theme::ALL {
                     r.spawn((button(theme.name(), fonts, colors::button()), ThemeChoice(theme))).observe(
@@ -208,7 +208,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             });
             list.spawn(label(ZOOM_HELP, fonts.text(15.0), colors::dim()));
 
-            list.spawn(label("Microphone", fonts.bold(20.0), colors::accent()));
+            list.spawn(label("Microphone", fonts.display(crate::ui::size::TITLE), colors::accent()));
             toggle(list, "Listen to the instrument", fonts, |s| s.microphone, |s| s.microphone = !s.microphone);
             stepper(
                 list,
@@ -220,7 +220,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             );
             row(list, "Tuner, to the strings", fonts).with_children(|r| crate::tuner::spawn_tuner(r, fonts, true));
 
-            list.spawn(label("Games", fonts.bold(20.0), colors::accent()));
+            list.spawn(label("Games", fonts.display(crate::ui::size::TITLE), colors::accent()));
             stepper(list, "Hint after", fonts, |s| format!("{:.0} s", s.hint_delay), |s| s.hint_delay -= 1.0, |s| s.hint_delay += 1.0);
             stepper(
                 list,

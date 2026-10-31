@@ -102,7 +102,14 @@ pub fn spawn_shape_diagram(parent: &mut ChildSpawnerCommands, shape: &Shape, fon
 /// The finger colors with their names, the legend of every diagram and fretboard.
 pub fn spawn_finger_legend(parent: &mut ChildSpawnerCommands, fonts: &Fonts) {
     parent
-        .spawn(Node { flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap, column_gap: px(8), row_gap: px(4), ..default() })
+        .spawn(Node {
+            flex_direction: FlexDirection::Row,
+            flex_wrap: FlexWrap::NoWrap,
+            column_gap: px(8),
+            row_gap: px(4),
+            flex_shrink: 0.0,
+            ..default()
+        })
         .with_children(|row| {
             for (finger, name) in crate::drills::FINGER_NAMES.iter().enumerate().skip(1) {
                 row.spawn((

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub enum Theme {
+    /// Ebony, rosewood, bone and nickel: the woods and the hardware of the instrument.
     #[default]
     Dark,
     Light,
@@ -57,7 +58,7 @@ impl Theme {
 
     pub fn name(self) -> &'static str {
         match self {
-            Theme::Dark => "Dark",
+            Theme::Dark => "Ebony (dark)",
             Theme::Light => "Light",
             Theme::CatppuccinMocha => "Catppuccin Mocha",
             Theme::CatppuccinLatte => "Catppuccin Latte",
@@ -87,7 +88,7 @@ impl Theme {
         };
         match self {
             Theme::Dark => {
-                p(0x1c1f24, 0x292b36, 0x383d4a, 0x4a5163, 0xa87321, 0xebe8e3, 0x99a1a8, 0xf2ad40, 0x40ba80, 0xe6544a, 0x4d8feb, 0x2b2e33)
+                p(0x16120f, 0x221b17, 0x302823, 0x3e342d, 0x8c3b2b, 0xede5d6, 0xa89d8d, 0xa9bcc8, 0x5dbb7e, 0xe0604e, 0x7fa7d9, 0x1d1814)
             }
             Theme::Light => {
                 p(0xf4f2ee, 0xe6e3dd, 0xd6d2ca, 0xc6c1b8, 0xf0c98a, 0x1f1f24, 0x5f646b, 0xb5670a, 0x1a8a52, 0xc8322b, 0x2563c9, 0xe9e7e3)

@@ -218,7 +218,7 @@ fn render(
     }
     let pool = find.learned.max(MIN_POOL).min(find.order.len());
     let score = format!(
-        "{} notes found, {} without a mistake · notes asked: the first {} of the learning order",
+        "{} notes found, {} without a mistake. The notes asked are the first {} of the learning order.",
         find.rounds, find.clean_rounds, pool
     );
     for mut text in &mut texts.p2() {

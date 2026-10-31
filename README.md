@@ -171,5 +171,6 @@ See [TODO.md](TODO.md).
 ## Licenses
 
 The code is under the Apache License 2.0. The fonts are under the SIL Open Font License 1.1: Fira
-Sans (Mozilla, the Bevy feathers copy) and Noto Music (Google, the clefs, sharps and flats), see
+Sans (Mozilla, the Bevy feathers copy), Barlow Condensed (the Barlow Project Authors, the titles
+and the numbers) and Noto Music (Google, the clefs, sharps and flats), see
 `assets/fonts`.

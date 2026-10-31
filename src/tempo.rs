@@ -21,8 +21,8 @@ pub const MISSES_TO_SLOW_DOWN: u8 = 2;
 /// (80 BPM in eighths, 120 BPM in eighths, 90 BPM in sixteenths).
 pub const TIER_NOTES_PER_MINUTE: [u32; 3] = [160, 240, 360];
 
-/// The tier of an exercise by its fastest clean round with the metronome, shown as the border
-/// of its tile with the rarity colors of the games.
+/// The tier of an exercise by its fastest clean round with the metronome, shown as rank pips on
+/// its tile, as in the games.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Tier {
     Basic,
@@ -61,25 +61,6 @@ impl Tier {
             Tier::Advanced => TIER_NOTES_PER_MINUTE[1],
             Tier::Legendary => TIER_NOTES_PER_MINUTE[2],
         }
-    }
-
-    /// Gray, green, purple and orange, as the rarities of the games; darker steps on the light
-    /// themes for a 3:1 contrast. The tier is always written on the tile too, the gray of Basic
-    /// is no hue.
-    pub fn color(self) -> bevy::prelude::Color {
-        use bevy::prelude::Color;
-        let light = crate::theme::is_light();
-        let hex = match (self, light) {
-            (Tier::Basic, false) => 0x9ea3ad,
-            (Tier::Medium, false) => 0x4cc766,
-            (Tier::Advanced, false) => 0xa86bf2,
-            (Tier::Legendary, false) => 0xff9e1f,
-            (Tier::Basic, true) => 0x6b7280,
-            (Tier::Medium, true) => 0x2e8b3e,
-            (Tier::Advanced, true) => 0x7c4dd6,
-            (Tier::Legendary, true) => 0xc25f00,
-        };
-        Color::srgb_u8((hex >> 16) as u8, (hex >> 8) as u8, hex as u8)
     }
 }
 

@@ -24,7 +24,8 @@ use crate::staff::{StaffDrawing, StaffView, draw_staff, spawn_staff};
 use crate::storage::now_unix_seconds;
 use crate::tempo::{BPM_STEP, TIMING_GOAL, TempoChange, after_round, notes_in_time, set_tempo, tempo_of};
 use crate::ui::{
-    Btn, Fonts, Icons, Screen, button, button_frame, colors, label, percent_text, screen_root, scroll_area, small_button, spawn_top_bar,
+    Btn, Fonts, Icons, Screen, button, button_frame, colors, label, percent_text, screen_root, scroll_area, size, small_button,
+    spawn_top_bar,
 };
 
 /// The accuracy of a clean round with the metronome: two stars.
@@ -96,8 +97,18 @@ impl Drill {
 #[derive(Component)]
 struct TabView;
 
+/// A value of the line under the staff, readable from the instrument.
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+enum Hud {
+    Note,
+    Right,
+    InTime,
+    Speed,
+}
+
+/// The note to play, big, and where it is.
 #[derive(Component)]
-struct StatusText;
+struct NoteBig;
 
 #[derive(Component)]
 struct FeedbackText;
@@ -217,7 +228,52 @@ fn spawn(
         root.spawn(scroll_area()).observe(crate::ui::scroll_on_wheel).observe(crate::ui::scroll_on_drag).with_children(|body| {
             spawn_description(body, &exercise, &catalog, &instrument, fonts);
             spawn_metronome_panel(body, fonts);
-            // The note three ways: the tablature, the staff, and what the microphone hears.
+            // The note to play, big enough to read from the instrument, and how the round goes.
+            body.spawn(Node {
+                flex_direction: FlexDirection::Row,
+                flex_wrap: FlexWrap::Wrap,
+                align_items: AlignItems::Center,
+                column_gap: px(28),
+                row_gap: px(4),
+                flex_shrink: 0.0,
+                ..default()
+            })
+            .with_children(|row| {
+                row.spawn((Node { flex_direction: FlexDirection::Column, min_width: px(150), ..default() }, Pickable::IGNORE))
+                    .with_children(|c| {
+                        c.spawn((label("", fonts.display(size::HERO * 1.6), colors::text()), NoteBig));
+                        c.spawn((label("", fonts.text(size::TEXT), colors::dim()), NoteCaption));
+                    });
+                row.spawn(Node { flex_direction: FlexDirection::Column, row_gap: px(4), flex_grow: 1.0, ..default() }).with_children(|c| {
+                    c.spawn(Node {
+                        flex_direction: FlexDirection::Row,
+                        flex_wrap: FlexWrap::Wrap,
+                        column_gap: px(28),
+                        row_gap: px(4),
+                        ..default()
+                    })
+                    .with_children(|values| {
+                        for (hud, caption) in
+                            [(Hud::Note, "note"), (Hud::Right, "right"), (Hud::InTime, "in time"), (Hud::Speed, "notes a minute")]
+                        {
+                            values
+                                .spawn(Node {
+                                    flex_direction: FlexDirection::Row,
+                                    align_items: AlignItems::Baseline,
+                                    column_gap: px(6),
+                                    ..default()
+                                })
+                                .with_children(|item| {
+                                    item.spawn((label("-", fonts.display(size::NUMBER), colors::text()), hud));
+                                    item.spawn(label(caption, fonts.text(size::TEXT), colors::dim()));
+                                });
+                        }
+                    });
+                    c.spawn((label("", fonts.text(size::LEAD), colors::accent()), FeedbackText));
+                });
+            });
+            spawn_fretboard(body, &instrument, settings.left_handed, fonts);
+            // The same note on the tablature and the staff, and what the microphone hears.
             body.spawn(Node {
                 flex_direction: FlexDirection::Row,
                 flex_wrap: FlexWrap::Wrap,
@@ -229,16 +285,9 @@ fn spawn(
             })
             .with_children(|row| {
                 row.spawn((Node { flex_direction: FlexDirection::Column, flex_shrink: 0.0, ..default() }, TabView));
-                row.spawn(Node { flex_direction: FlexDirection::Column, align_items: AlignItems::Center, row_gap: px(4), ..default() })
-                    .with_children(|column| {
-                        spawn_staff(column, instrument.kind.clef());
-                        column.spawn((label("", fonts.bold(16.0), colors::text()), NoteCaption));
-                    });
+                spawn_staff(row, instrument.kind.clef());
                 crate::tuner::spawn_tuner(row, fonts, false);
             });
-            body.spawn((label("", fonts.bold(18.0), colors::text()), StatusText));
-            body.spawn((label("", fonts.text(17.0), colors::accent()), FeedbackText));
-            spawn_fretboard(body, &instrument, settings.left_handed, fonts);
             body.spawn(Node { flex_direction: FlexDirection::Row, column_gap: px(10), flex_shrink: 0.0, ..default() }).with_children(
                 |row| {
                     row.spawn(button("Restart", fonts, colors::button())).observe(|_: On<PointerClick>, mut round: Round| round.restart());
@@ -602,7 +651,7 @@ fn finish(
     };
     let mut lines = vec![verdict];
     lines.push(format!(
-        "Accuracy {} ({} right, {} wrong) · {:.0} notes per minute",
+        "{} of the notes right, {} of them, {} wrong; {:.0} notes a minute",
         percent_text(accuracy),
         drill.correct,
         drill.wrong,
@@ -726,7 +775,12 @@ fn render(
     layers: Query<(Entity, &MarksLayer)>,
     tabs: Query<Entity, With<TabView>>,
     staffs: Query<(Entity, &StaffView)>,
-    mut texts: ParamSet<(Query<&mut Text, With<StatusText>>, Query<&mut Text, With<FeedbackText>>, Query<&mut Text, With<NoteCaption>>)>,
+    mut texts: ParamSet<(
+        Query<(&mut Text, &Hud)>,
+        Query<&mut Text, With<FeedbackText>>,
+        Query<&mut Text, With<NoteCaption>>,
+        Query<&mut Text, With<NoteBig>>,
+    )>,
     mut expected: ResMut<Expected>,
 ) {
     if !drill.dirty {
@@ -756,8 +810,7 @@ fn render(
     }
     let caption = match (current, sounding) {
         (Some(step), Some(note)) => format!(
-            "{}: string {} fret {}, written {}",
-            note.full_name(),
+            "string {}, fret {}, written {}",
             drill.instrument.strings() - step.position.string,
             step.position.fret,
             note.written().full_name()
@@ -767,20 +820,28 @@ fn render(
     for mut text in &mut texts.p2() {
         text.0 = caption.clone();
     }
-    let total = drill.steps.len();
-    let mut status_text = format!(
-        "Note {}/{} · accuracy {} · {:.0} notes/min",
-        (drill.index + 1).min(total),
-        total,
-        if drill.correct + drill.wrong == 0 { "-".to_string() } else { percent_text(drill.accuracy()) },
-        drill.notes_per_minute(now)
-    );
-    if metronome.on {
-        let in_time = drill.in_time(settings.notes_per_beat).map_or("-".to_string(), percent_text);
-        status_text.push_str(&format!(" · in time {in_time} at {} BPM", drill.bpm));
+    let big = sounding.map(|n| n.full_name()).unwrap_or_default();
+    for mut text in &mut texts.p3() {
+        text.0 = big.clone();
     }
-    for mut text in &mut texts.p0() {
-        text.0 = status_text.clone();
+    let total = drill.steps.len();
+    let in_time = drill.in_time(settings.notes_per_beat).filter(|_| metronome.on);
+    for (mut text, hud) in &mut texts.p0() {
+        text.0 = match hud {
+            Hud::Note => format!("{}/{}", (drill.index + 1).min(total), total),
+            Hud::Right => {
+                if drill.correct + drill.wrong == 0 {
+                    "-".to_string()
+                } else {
+                    percent_text(drill.accuracy())
+                }
+            }
+            Hud::InTime => in_time.map_or("-".to_string(), percent_text),
+            Hud::Speed => match drill.notes_per_minute(now) {
+                0.0 => "-".to_string(),
+                speed => format!("{speed:.0}"),
+            },
+        };
     }
     let feedback_text = match current {
         Some(step) if drill.hinted => format!(

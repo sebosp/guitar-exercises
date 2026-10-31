@@ -113,7 +113,7 @@ pub fn read(pitch: f32, open: Option<&[i32]>) -> Reading {
     match open.filter(|o| !o.is_empty()) {
         None => {
             let cents = (pitch - heard as f32) * 100.0;
-            Reading { note: midi_name(heard), cents, detail: format!("{hz:.1} Hz · {cents:+.0} cents") }
+            Reading { note: midi_name(heard), cents, detail: format!("{hz:.1} Hz, {cents:+.0} cents") }
         }
         Some(open) => {
             let (string, &target) = open
@@ -132,7 +132,7 @@ pub fn read(pitch: f32, open: Option<&[i32]>) -> Reading {
             Reading {
                 note: format!("String {}: {}", open.len() - string, midi_name(target)),
                 cents,
-                detail: format!("Heard {} {hz:.1} Hz · {cents:+.0} cents, {advice}", midi_name(heard)),
+                detail: format!("Heard {} at {hz:.1} Hz, {cents:+.0} cents: {advice}", midi_name(heard)),
             }
         }
     }
