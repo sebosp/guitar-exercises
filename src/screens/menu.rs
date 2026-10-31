@@ -13,8 +13,9 @@ impl Plugin for MenuPlugin {
     }
 }
 
-const ENTRIES: [(&str, &str, Screen); 5] = [
-    ("Finger drills", "The four fingers in every order, wider spans, string crossings", Screen::Drills),
+const ENTRIES: [(&str, &str, Screen); 6] = [
+    ("Finger drills", "The four fingers in every order, wider spans, string crossings, stretches", Screen::Drills),
+    ("Scales", "Any scale and mode: runs, sequences, the notes in every order, string skipping", Screen::Scales),
     ("Learn notes", "Read a note on the staff, see it on the fretboard, play it", Screen::Learn),
     ("Find them all", "A note on the staff: tap every place it is on the fretboard", Screen::Find),
     ("Statistics", "Accuracy and speed of the drills and the notes", Screen::Stats),

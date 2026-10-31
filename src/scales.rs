@@ -241,6 +241,16 @@ pub fn sequence<T: Copy>(notes: &[T], group: usize) -> Vec<T> {
     notes.windows(group).flatten().copied().collect()
 }
 
+/// The notes in windows of `order.len()`, each played in `order` (from 1): 1-3-2-4 over
+/// `a b c d e` is `a c b d, b d c e`.
+pub fn permuted<T: Copy>(notes: &[T], order: &[u8]) -> Vec<T> {
+    let len = order.len();
+    if len == 0 || notes.len() < len {
+        return notes.to_vec();
+    }
+    notes.windows(len).flat_map(|w| order.iter().map(move |&i| w[i as usize - 1])).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -323,5 +333,7 @@ mod tests {
         assert_eq!(sequence(&n, 3), [1, 2, 3, 2, 3, 4, 3, 4, 5]);
         assert_eq!(sequence(&[6, 5, 4, 3], 3), [6, 5, 4, 5, 4, 3]);
         assert_eq!(sequence(&n, 9), n);
+        assert_eq!(permuted(&n, &[1, 3, 2, 4]), [1, 3, 2, 4, 2, 4, 3, 5]);
+        assert_eq!(permuted(&n, &[2, 1]), [2, 1, 3, 2, 4, 3, 5, 4]);
     }
 }

@@ -1,18 +1,18 @@
-//! The drills page: every exercise in its row, with its stars and the tier of its tempo, locked
-//! until it opens. The scale of the scale exercises is chosen here; a button practices the
-//! weakest exercise, another opens a locked one at random.
+//! The pages of exercises, the drills and the scales: every exercise in its row, with its stars
+//! and the tier of its tempo, locked until it opens. The scale is chosen on its page; a button
+//! practices the weakest exercise of the page, another opens a locked one at random.
 use bevy::picking::events::PointerClick;
 use bevy::prelude::*;
 
 use crate::diagram::{spawn_finger_legend, spawn_shape_diagram};
 use crate::drills::{SHAPES, gap_shape};
-use crate::exercises::{Catalog, EXTRA_STARS, Exercise, Kind, Row, Section, group_example};
+use crate::exercises::{Catalog, EXTRA_STARS, Exercise, Kind, Page, Row, Section, group_example, permutation_example};
 use crate::progress::{InstrumentProgress, Progress};
 use crate::scales::{ROOT_NAMES, ScaleFamily};
 use crate::settings::Settings;
 use crate::tempo::{Tier, tempo_of};
 use crate::ui::{
-    Fonts, Icons, Screen, button, button_frame, colors, label, screen_root, scroll_area, small_button, spawn_stars, spawn_top_bar,
+    Fonts, Icons, ReturnTo, Screen, button, button_frame, colors, label, screen_root, scroll_area, small_button, spawn_stars, spawn_top_bar,
 };
 
 /// The exercise to play, by its key.
@@ -33,30 +33,59 @@ pub struct DrillsPlugin;
 
 impl Plugin for DrillsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SelectedLevel>().init_resource::<Notice>().add_systems(OnEnter(Screen::Drills), spawn);
+        app.init_resource::<SelectedLevel>()
+            .init_resource::<Notice>()
+            .add_systems(OnEnter(Screen::Drills), |p: PageParams| spawn(p, Page::Drills))
+            .add_systems(OnEnter(Screen::Scales), |p: PageParams| spawn(p, Page::Scales));
     }
 }
 
-fn spawn(
-    mut commands: Commands,
-    fonts: Res<Fonts>,
-    icons: Res<Icons>,
-    settings: Res<Settings>,
-    progress: Res<Progress>,
-    mut notice: ResMut<Notice>,
-) {
-    let fonts = &*fonts;
-    let icons = &*icons;
+/// The screen of a page.
+pub fn screen_of(page: Page) -> Screen {
+    match page {
+        Page::Drills => Screen::Drills,
+        Page::Scales => Screen::Scales,
+    }
+}
+
+#[derive(bevy::ecs::system::SystemParam)]
+struct PageParams<'w, 's> {
+    commands: Commands<'w, 's>,
+    fonts: Res<'w, Fonts>,
+    icons: Res<'w, Icons>,
+    settings: Res<'w, Settings>,
+    progress: Res<'w, Progress>,
+    notice: ResMut<'w, Notice>,
+}
+
+fn spawn(mut p: PageParams, page: Page) {
+    let fonts = &*p.fonts;
+    let icons = &*p.icons;
+    let settings = &*p.settings;
     let catalog = settings.catalog();
-    let record = progress.get(&settings.instrument().key()).cloned().unwrap_or_default();
-    let notice = std::mem::take(&mut notice.0);
-    commands.spawn(screen_root(Screen::Drills)).with_children(|root| {
-        spawn_top_bar(root, "Drills", Screen::Drills, fonts);
+    let record = p.progress.get(&settings.instrument().key()).cloned().unwrap_or_default();
+    let notice = std::mem::take(&mut p.notice.0);
+    let screen = screen_of(page);
+    let title = match page {
+        Page::Drills => "Drills",
+        Page::Scales => "Scales",
+    };
+    p.commands.spawn(screen_root(screen)).with_children(|root| {
+        spawn_top_bar(root, title, screen, fonts);
         root.spawn(scroll_area()).observe(crate::ui::scroll_on_wheel).observe(crate::ui::scroll_on_drag).with_children(|list| {
-            spawn_header(list, &catalog, &record, &notice, fonts, icons);
-            for section in Section::ALL {
+            spawn_header(list, &catalog, &record, page, &notice, fonts, icons);
+            if page == Page::Drills {
+                list.spawn(button("Scales: runs, sequences and orders of the notes  >", fonts, colors::button())).insert(Node {
+                    align_self: AlignSelf::Start,
+                    padding: UiRect::axes(px(16), px(9)),
+                    border_radius: BorderRadius::all(px(8)),
+                    ..default()
+                })
+                .observe(|_: On<PointerClick>, mut next: ResMut<NextState<Screen>>| next.set(Screen::Scales));
+            }
+            for section in Section::ALL.into_iter().filter(|s| s.page() == page) {
                 let rows: Vec<&Row> = catalog.rows.iter().filter(|r| r.section == section).collect();
-                if section == Section::Extra && !catalog.extra_revealed(&record) {
+                if section.is_extra() && !catalog.extra_revealed(&record) {
                     spawn_extra_teaser(list, &record, fonts);
                     continue;
                 }
@@ -71,7 +100,7 @@ fn spawn(
                         ));
                         spawn_finger_legend(list, fonts);
                     }
-                    Section::Scales => spawn_scale_picker(list, &settings, fonts),
+                    Section::Scales => spawn_scale_picker(list, settings, fonts),
                     Section::Stretches => {
                         list.spawn(label(
                             "Growing gaps: the four fingers 2 frets apart, then wider in the extra exercises. Growing shifts: one finger per fret moving up the neck by jumps that grow, back down on the next string.",
@@ -80,7 +109,10 @@ fn spawn(
                         ));
                     }
                     Section::Extra => {
-                        list.spawn(label("Skipping 3 strings and more, wider gaps, bigger shifts.", fonts.text(15.0), colors::dim()));
+                        list.spawn(label("Wider gaps, bigger shifts.", fonts.text(15.0), colors::dim()));
+                    }
+                    Section::ScaleExtra => {
+                        list.spawn(label("The scale skipping 3 strings and more: more than four strings apart.", fonts.text(15.0), colors::dim()));
                     }
                 }
                 if section == Section::Scales && rows.is_empty() {
@@ -99,6 +131,7 @@ fn spawn_header(
     list: &mut ChildSpawnerCommands,
     catalog: &Catalog,
     record: &InstrumentProgress,
+    page: Page,
     notice: &str,
     fonts: &Fonts,
     icons: &Icons,
@@ -121,29 +154,31 @@ fn spawn_header(
                 stars.spawn(label(record.total_stars().to_string(), fonts.bold(22.0), colors::text()));
             });
         row.spawn(button("Practice the weakest", fonts, colors::selected())).observe(
-            |_: On<PointerClick>,
-             settings: Res<Settings>,
-             progress: Res<Progress>,
-             mut selected: ResMut<SelectedLevel>,
-             mut next: ResMut<NextState<Screen>>| {
+            move |_: On<PointerClick>,
+                  settings: Res<Settings>,
+                  progress: Res<Progress>,
+                  mut selected: ResMut<SelectedLevel>,
+                  mut back: ResMut<ReturnTo>,
+                  mut next: ResMut<NextState<Screen>>| {
                 let record = progress.get(&settings.instrument().key()).cloned().unwrap_or_default();
-                if let Some(weakest) = settings.catalog().weakest(&record) {
+                if let Some(weakest) = settings.catalog().weakest(&record, page) {
                     selected.0 = weakest.key.clone();
+                    back.0 = screen_of(page);
                     next.set(Screen::Drill);
                 }
             },
         );
-        let locked = catalog.locked(record).len();
+        let locked = catalog.locked(record, page).len();
         row.spawn(button(format!("Unlock a random level ({locked} locked)"), fonts, colors::button())).observe(
-            |_: On<PointerClick>,
-             settings: Res<Settings>,
-             mut progress: ResMut<Progress>,
-             mut notice: ResMut<Notice>,
-             mut next: ResMut<NextState<Screen>>| {
+            move |_: On<PointerClick>,
+                  settings: Res<Settings>,
+                  mut progress: ResMut<Progress>,
+                  mut notice: ResMut<Notice>,
+                  mut next: ResMut<NextState<Screen>>| {
                 let catalog = settings.catalog();
                 let key = settings.instrument().key();
                 let record = progress.of(&key);
-                let locked = catalog.locked(record);
+                let locked = catalog.locked(record, page);
                 notice.0 = if locked.is_empty() {
                     "Every level is open.".to_string()
                 } else {
@@ -153,7 +188,7 @@ fn spawn_header(
                 };
                 progress.save();
                 // The same state: the page is built again.
-                next.set(Screen::Drills);
+                next.set(screen_of(page));
             },
         );
     });
@@ -287,7 +322,7 @@ fn change_scale(mut settings: ResMut<Settings>, mut next: ResMut<NextState<Scree
     change(&mut settings.scale);
     settings.sanitize();
     settings.save();
-    next.set(Screen::Drills);
+    next.set(Screen::Scales);
 }
 
 fn spawn_row(
@@ -336,7 +371,7 @@ fn spawn_row(
         })
         .with_children(|grid| {
             for exercise in &row.exercises {
-                spawn_tile(grid, exercise, catalog, record, fonts, icons);
+                spawn_tile(grid, exercise, catalog, record, row.section.page(), fonts, icons);
             }
         });
     });
@@ -347,6 +382,7 @@ fn spawn_tile(
     exercise: &Exercise,
     catalog: &Catalog,
     record: &InstrumentProgress,
+    page: Page,
     fonts: &Fonts,
     icons: &Icons,
 ) {
@@ -373,8 +409,14 @@ fn spawn_tile(
         .with_children(|tile| {
             let text_color = if unlocked { colors::text() } else { colors::dim() };
             tile.spawn(label(&exercise.label, fonts.bold(16.0), text_color));
-            if let Kind::Scale { group, .. } = exercise.kind {
-                tile.spawn(label(group_example(group), fonts.text(12.0), colors::dim()));
+            match exercise.kind {
+                Kind::Scale { group, .. } => {
+                    tile.spawn(label(group_example(group), fonts.text(12.0), colors::dim()));
+                }
+                Kind::Permutation { order, len } => {
+                    tile.spawn(label(permutation_example(&order[..len as usize]), fonts.text(12.0), colors::dim()));
+                }
+                _ => {}
             }
             if !unlocked {
                 tile.spawn(label("locked", fonts.text(12.0), colors::dim()));
@@ -395,10 +437,16 @@ fn spawn_tile(
                 tile.spawn(label(tier.name(), fonts.bold(12.0), colors::text()));
             }
         })
-        .observe(move |_: On<PointerClick>, mut selected: ResMut<SelectedLevel>, mut next: ResMut<NextState<Screen>>| {
-            if unlocked {
-                selected.0 = key.clone();
-                next.set(Screen::Drill);
-            }
-        });
+        .observe(
+            move |_: On<PointerClick>,
+                  mut selected: ResMut<SelectedLevel>,
+                  mut back: ResMut<ReturnTo>,
+                  mut next: ResMut<NextState<Screen>>| {
+                if unlocked {
+                    selected.0 = key.clone();
+                    back.0 = screen_of(page);
+                    next.set(Screen::Drill);
+                }
+            },
+        );
 }

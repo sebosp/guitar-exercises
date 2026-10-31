@@ -272,17 +272,22 @@ fn spawn_description(
                     crate::diagram::spawn_shape_diagram(row, &shape, fonts)
                 }
             }
-            Kind::Scale { group, skip } => {
+            Kind::Scale { .. } | Kind::Permutation { .. } => {
                 let scale = &catalog.scale;
+                let how = match exercise.kind {
+                    Kind::Scale { group, skip } => format!("{}, {}", skip_name(skip).to_lowercase(), group_example(group)),
+                    Kind::Permutation { order, len } => {
+                        format!(
+                            "adjacent strings, the notes in the order {}",
+                            crate::exercises::permutation_example(&order[..len as usize])
+                        )
+                    }
+                    _ => String::new(),
+                };
                 row.spawn(Node { flex_direction: FlexDirection::Column, row_gap: px(2), ..default() }).with_children(|c| {
                     c.spawn(label(format!("{}: {}", scale.name(), scale.note_names().join(" ")), fonts.bold(17.0), colors::text()));
                     c.spawn(label(
-                        format!(
-                            "{} notes per string, {}, {}: up and back down",
-                            scale.family.notes_per_string(),
-                            skip_name(skip).to_lowercase(),
-                            group_example(group)
-                        ),
+                        format!("{} notes per string, {how}: up and back down", scale.family.notes_per_string()),
                         fonts.text(15.0),
                         colors::dim(),
                     ));
@@ -693,8 +698,8 @@ fn finish(
                                 );
                             }
                             row.spawn(button("Levels", fonts, colors::button())).observe(
-                                |_: On<PointerClick>, mut state: ResMut<NextState<Screen>>| {
-                                    state.set(Screen::Drills);
+                                |_: On<PointerClick>, from: Res<crate::ui::ReturnTo>, mut state: ResMut<NextState<Screen>>| {
+                                    state.set(from.0);
                                 },
                             );
                         });
@@ -834,8 +839,8 @@ fn fretboard_marks(drill: &Drill, note_names: bool) -> Vec<Mark> {
                 put(&mut marks, mark);
             }
         }
-        Kind::Scale { .. } | Kind::Shifts { .. } => {
-            if matches!(drill.exercise.kind, Kind::Scale { .. }) {
+        Kind::Scale { .. } | Kind::Permutation { .. } | Kind::Shifts { .. } => {
+            if matches!(drill.exercise.kind, Kind::Scale { .. } | Kind::Permutation { .. }) {
                 for step in steps {
                     put(&mut marks, Mark::new(step.position, text(step), colors::FINGERS[step.finger as usize].with_alpha(0.25)));
                 }

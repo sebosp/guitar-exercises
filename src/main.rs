@@ -25,12 +25,13 @@ fn main() {
 /// `GE_SCREENSHOT=out.png` opens a screen, plays a few notes by itself, saves a screenshot and
 /// exits, to check the screens without a person at the instrument:
 ///
-/// - `GE_SCREEN`: menu, drills, drill, learn, find, settings or stats;
+/// - `GE_SCREEN`: menu, drills, scales, drill, learn, find, settings or stats;
 /// - `GE_LEVEL`: the drill, by its place on the drills page, or `GE_EXERCISE` by its key;
 /// - `GE_PLAY`: the notes played right (heard by the "microphone"), `GE_TAP` tapped right,
 ///   `GE_MISS` wrong notes heard;
 /// - `GE_WAIT`: seconds to wait after them, for the hints;
 /// - `GE_SCROLL`: mouse wheel lines down over the middle of the window, through the picking;
+/// - `GE_REBUILD=1`: the screen built again after the scroll, as a setting changed on it does;
 /// - `GE_SIZE`: the window size, `1280x860` by default;
 /// - `GE_SOUND=1`: the clicks of the metronome out loud.
 ///
@@ -61,6 +62,7 @@ mod snapshot {
         miss: u32,
         wait: f32,
         scroll: f32,
+        rebuild: bool,
     }
 
     fn var<T: std::str::FromStr>(name: &str, default: T) -> T {
@@ -73,6 +75,7 @@ mod snapshot {
         };
         let screen = match std::env::var("GE_SCREEN").unwrap_or_default().as_str() {
             "drills" => Screen::Drills,
+            "scales" => Screen::Scales,
             "drill" => Screen::Drill,
             "learn" => Screen::Learn,
             "find" => Screen::Find,
@@ -88,6 +91,7 @@ mod snapshot {
             miss: var("GE_MISS", 0),
             wait: var("GE_WAIT", 0.0),
             scroll: var("GE_SCROLL", 0.0),
+            rebuild: var("GE_REBUILD", 0) == 1,
         })
         .add_systems(Startup, setup)
         .add_systems(Update, run);
@@ -132,7 +136,7 @@ mod snapshot {
         mut exit: MessageWriter<AppExit>,
     ) {
         *frame += 1;
-        if *frame == 5 {
+        if *frame == 5 || (snapshot.rebuild && *frame == 34) {
             next.set(snapshot.screen);
         }
         let start = 30;

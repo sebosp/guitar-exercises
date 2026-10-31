@@ -16,6 +16,8 @@ pub enum Screen {
     Menu,
     /// The list of the drill levels.
     Drills,
+    /// The scale exercises.
+    Scales,
     /// A drill being played.
     Drill,
     Learn,
@@ -25,12 +27,22 @@ pub enum Screen {
 }
 
 impl Screen {
-    /// Where Escape and the back button go.
-    pub fn back(self) -> Screen {
+    /// Where Escape and the back button go: a drill back to the page it was opened from.
+    pub fn back(self, drill_from: &ReturnTo) -> Screen {
         match self {
-            Screen::Drill => Screen::Drills,
+            Screen::Drill => drill_from.0,
             _ => Screen::Menu,
         }
+    }
+}
+
+/// The page a drill was opened from: the drills or the scales.
+#[derive(Resource, Debug, Clone, Copy)]
+pub struct ReturnTo(pub Screen);
+
+impl Default for ReturnTo {
+    fn default() -> Self {
+        ReturnTo(Screen::Drills)
     }
 }
 
@@ -223,11 +235,28 @@ struct MicLevel;
 #[derive(Component)]
 pub struct Scrollable;
 
+/// The scroll of the screen shown. A screen built again in place (a setting changed on it, a
+/// level opened at random, another theme, the next level) comes back where it was; another
+/// screen starts at the top.
+#[derive(Resource, Default)]
+struct ScrollMemory {
+    y: f32,
+    /// The scroll to put back, for a few frames: the first layout of the new screen may not
+    /// have all its height yet and would clamp it.
+    restore: Option<(f32, u8)>,
+}
+
+/// The frames a scroll is put back for.
+const RESTORE_FRAMES: u8 = 6;
+
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<Screen>()
+            .init_resource::<ReturnTo>()
+            .init_resource::<ScrollMemory>()
+            .add_systems(Update, (screen_changed, restore_scroll, remember_scroll).chain())
             .add_systems(Startup, setup)
             .add_systems(Update, (hover_buttons, update_mic, escape_goes_back, apply_theme));
     }
@@ -277,9 +306,9 @@ fn hover_buttons(mut buttons: Query<(&Hovered, &Btn, &mut BackgroundColor), Chan
     }
 }
 
-fn escape_goes_back(keys: Res<ButtonInput<KeyCode>>, screen: Res<State<Screen>>, mut next: ResMut<NextState<Screen>>) {
+fn escape_goes_back(keys: Res<ButtonInput<KeyCode>>, screen: Res<State<Screen>>, from: Res<ReturnTo>, mut next: ResMut<NextState<Screen>>) {
     if keys.just_pressed(KeyCode::Escape) && *screen.get() != Screen::Menu {
-        next.set(screen.get().back());
+        next.set(screen.get().back(&from));
     }
 }
 
@@ -352,8 +381,8 @@ pub fn spawn_top_bar(parent: &mut ChildSpawnerCommands, title: &str, screen: Scr
         .with_children(|bar| {
             if screen != Screen::Menu {
                 bar.spawn(button("< Back", fonts, colors::button())).observe(
-                    move |_: On<PointerClick>, mut next: ResMut<NextState<Screen>>| {
-                        next.set(screen.back());
+                    move |_: On<PointerClick>, from: Res<ReturnTo>, mut next: ResMut<NextState<Screen>>| {
+                        next.set(screen.back(&from));
                     },
                 );
             }
@@ -400,6 +429,37 @@ fn update_mic(
     let fill = ((db + 60.0) / 60.0).clamp(0.0, 1.0) * 100.0;
     for mut node in &mut levels {
         node.width = percent(fill);
+    }
+}
+
+fn screen_changed(mut transitions: MessageReader<StateTransitionEvent<Screen>>, mut memory: ResMut<ScrollMemory>) {
+    for transition in transitions.read() {
+        if transition.exited == transition.entered {
+            memory.restore = Some((memory.y, RESTORE_FRAMES));
+        } else {
+            *memory = ScrollMemory::default();
+        }
+    }
+}
+
+fn restore_scroll(mut memory: ResMut<ScrollMemory>, mut areas: Query<&mut ScrollPosition, With<Scrollable>>) {
+    let Some((y, frames)) = memory.restore else {
+        return;
+    };
+    for mut position in &mut areas {
+        if position.y != y {
+            position.y = y;
+        }
+    }
+    memory.restore = frames.checked_sub(1).filter(|f| *f > 0).map(|f| (y, f));
+}
+
+fn remember_scroll(mut memory: ResMut<ScrollMemory>, areas: Query<&ScrollPosition, (With<Scrollable>, Changed<ScrollPosition>)>) {
+    if memory.restore.is_some() {
+        return;
+    }
+    for position in &areas {
+        memory.y = position.y;
     }
 }
 

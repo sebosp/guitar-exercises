@@ -58,6 +58,10 @@ high e). Each scale and mode keeps its own progress.
 Growing gaps: the four fingers 2 frets apart on one string. Growing shifts: one finger per fret
 moving up the neck by jumps that grow (fret 1, 3, 6...), back down on the next string.
 
+The scales have their own page (from the menu, or the drills page): the runs and sequences, and
+the notes of the scale in every order, like the fingers: windows of 2, 3 or 4 notes played as
+2-1 (2 1, 3 2, 4 3...), 1-3-2 (1 3 2, 2 4 3...), 1-3-2-4 and the 23 orders of 4 notes.
+
 ### Stars, tiers and the extra exercises
 
 A round earns a star for 80% of the notes right, two for 90%, three for all of them; a star opens
@@ -106,9 +110,11 @@ right answers that clear a note. The statistics show every drill played and ever
 accuracy, its time to answer and the hints.
 
 The window is scaled to fit its size (a big screen or the full screen shows everything bigger, a
-phone not under 75%), and zoomed over that with Ctrl and the mouse wheel, a pinch of the trackpad,
-Ctrl+= Ctrl+- Ctrl+0 or the buttons of the settings: to read it from the instrument a few steps
-away. F11 toggles the full screen.
+phone not under 75%), and zoomed over that with Ctrl (Cmd on macOS) and the mouse wheel, a pinch
+of the trackpad or of two fingers on a touch screen, Ctrl+= Ctrl+- Ctrl+0 or the buttons of the
+settings: to read it from the instrument a few steps away. F11 (or Cmd+Ctrl+F on macOS) toggles
+the full screen; in the browser F11 and Ctrl are the browser's. A setting changed on a screen
+keeps its scroll.
 
 The settings and the progress are saved on the device: `~/.config/guitar-exercises/` on Linux,
 `~/Library/Application Support/guitar-exercises/` on macOS, `%APPDATA%\guitar-exercises\` on

@@ -39,6 +39,17 @@ struct StringName(usize);
 #[derive(Component)]
 struct StringNote(usize);
 
+/// How to zoom and go full screen on this platform.
+const ZOOM_HELP: &str = if cfg!(target_os = "android") {
+    "Or two fingers on the screen, apart or together."
+} else if cfg!(target_arch = "wasm32") {
+    "Or two fingers on a touch screen. The browser zooms the whole page with Ctrl, and F11 is its full screen."
+} else if cfg!(target_os = "macos") {
+    "Or Cmd and the mouse wheel, a pinch of the trackpad, Cmd+= Cmd+- Cmd+0. Cmd+Ctrl+F or F11: full screen, to read it from the instrument."
+} else {
+    "Or Ctrl and the mouse wheel, a pinch of the trackpad, two fingers on a touch screen, Ctrl+= Ctrl+- Ctrl+0. F11: full screen, to read it from the instrument."
+};
+
 /// The zoom in percent.
 #[derive(Component)]
 struct ZoomText;
@@ -184,10 +195,10 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
                 r.spawn(small_button("-", fonts)).observe(|_: On<PointerClick>, mut zoom: MessageWriter<Zoom>| {
                     zoom.write(Zoom::OUT);
                 });
-                r.spawn((Node { min_width: px(70), justify_content: JustifyContent::Center, ..default() }, children![(
-                    label("", fonts.bold(18.0), colors::accent()),
-                    ZoomText
-                )]));
+                r.spawn((
+                    Node { min_width: px(70), justify_content: JustifyContent::Center, ..default() },
+                    children![(label("", fonts.bold(18.0), colors::accent()), ZoomText)],
+                ));
                 r.spawn(small_button("+", fonts)).observe(|_: On<PointerClick>, mut zoom: MessageWriter<Zoom>| {
                     zoom.write(Zoom::IN);
                 });
@@ -195,11 +206,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
                     zoom.write(Zoom::Reset);
                 });
             });
-            list.spawn(label(
-                "Or Ctrl and the mouse wheel, a pinch of the trackpad, Ctrl+= Ctrl+- Ctrl+0. F11: full screen, to read it from the instrument.",
-                fonts.text(15.0),
-                colors::dim(),
-            ));
+            list.spawn(label(ZOOM_HELP, fonts.text(15.0), colors::dim()));
 
             list.spawn(label("Microphone", fonts.bold(20.0), colors::accent()));
             toggle(list, "Listen to the instrument", fonts, |s| s.microphone, |s| s.microphone = !s.microphone);

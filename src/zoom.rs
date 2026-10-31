@@ -1,9 +1,13 @@
 //! The zoom of the whole window, and F11 for the full screen. The window is scaled to fit its
 //! size first: a big screen, or the full screen, shows everything bigger, a phone not under 75%
-//! (smaller text is too small to read; the screens scroll and wrap). Over that, Ctrl and the
-//! mouse wheel, a pinch of the trackpad, Ctrl+= Ctrl+- Ctrl+0, or the buttons of the settings
-//! zoom in and out, to read the screen from the instrument a few steps away. The zoom is saved
-//! with the settings. In the browser, its own zoom takes Ctrl, the wheel and the keys.
+//! (smaller text is too small to read; the screens scroll and wrap). Over that, Ctrl (Cmd on
+//! macOS) and the mouse wheel, a pinch of the trackpad or of two fingers on a touch screen,
+//! Ctrl+= Ctrl+- Ctrl+0, or the buttons of the settings zoom in and out, to read the screen from
+//! the instrument a few steps away. The zoom is saved with the settings.
+//!
+//! The full screen: F11, or Cmd+Ctrl+F on macOS. In the browser, F11, Ctrl with the wheel and
+//! the keys are the browser's own (its full screen and its zoom), the pinch and the buttons zoom
+//! the game.
 use bevy::input::ButtonState;
 use bevy::input::gestures::PinchGesture;
 use bevy::input::keyboard::{Key, KeyboardInput};
@@ -68,13 +72,14 @@ pub struct ZoomPlugin;
 
 impl Plugin for ZoomPlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<Zoom>().add_systems(Update, ((gestures, apply_zoom).chain(), full_screen));
+        app.add_message::<Zoom>().add_systems(Update, ((gestures, two_fingers, apply_zoom).chain(), full_screen));
     }
 }
 
-/// Ctrl is held: the wheel zooms instead of scrolling.
+/// Ctrl is held, Cmd on macOS: the wheel zooms instead of scrolling.
 pub fn ctrl_held(keys: &ButtonInput<KeyCode>) -> bool {
     keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight])
+        || (cfg!(target_os = "macos") && keys.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight]))
 }
 
 /// Ctrl and the wheel or a key, or a pinch.
@@ -111,6 +116,24 @@ fn gestures(
     }
 }
 
+/// Two fingers on a touch screen moving apart or together: the distance between them, from the
+/// last frame.
+fn two_fingers(touches: Res<Touches>, mut last: Local<Option<f32>>, mut zoom: MessageWriter<Zoom>) {
+    let fingers: Vec<Vec2> = touches.iter().take(3).map(|t| t.position()).collect();
+    let [a, b] = fingers[..] else {
+        *last = None;
+        return;
+    };
+    let distance = a.distance(b);
+    if let Some(before) = *last
+        && before > 10.0
+        && (distance - before).abs() > 0.5
+    {
+        zoom.write(Zoom::By((distance / before).clamp(0.8, 1.25)));
+    }
+    *last = Some(distance);
+}
+
 fn apply_zoom(
     mut changes: MessageReader<Zoom>,
     mut settings: ResMut<Settings>,
@@ -132,9 +155,13 @@ fn apply_zoom(
     }
 }
 
-/// F11: the full screen, and back.
+/// F11, or Cmd+Ctrl+F on macOS: the full screen, and back. Not in the browser: its F11 does it.
 fn full_screen(keys: Res<ButtonInput<KeyCode>>, mut window: Single<&mut Window, With<PrimaryWindow>>) {
-    if keys.just_pressed(KeyCode::F11) {
+    let mac = cfg!(target_os = "macos")
+        && keys.just_pressed(KeyCode::KeyF)
+        && keys.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight])
+        && keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]);
+    if !cfg!(target_arch = "wasm32") && (keys.just_pressed(KeyCode::F11) || mac) {
         window.mode = match window.mode {
             WindowMode::Windowed => WindowMode::BorderlessFullscreen(MonitorSelection::Current),
             _ => WindowMode::Windowed,
