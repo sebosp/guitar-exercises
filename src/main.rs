@@ -25,12 +25,13 @@ fn main() {
 /// `GE_SCREENSHOT=out.png` opens a screen, plays a few notes by itself, saves a screenshot and
 /// exits, to check the screens without a person at the instrument:
 ///
-/// - `GE_SCREEN`: menu, drills, scales, drill, learn, find, settings, stats or help;
+/// - `GE_SCREEN`: menu, drills, scales, drill, learn, find, settings, stats, help or songs;
 /// - `GE_LEVEL`: the drill, by its place on the drills page, or `GE_EXERCISE` by its key;
 /// - `GE_PLAY`: the notes played right (heard by the "microphone"), `GE_TAP` tapped right,
 ///   `GE_MISS` wrong notes heard;
 /// - `GE_WAIT`: seconds to wait after them, for the hints;
 /// - `GE_SCROLL`: mouse wheel lines down over the middle of the window, through the picking;
+/// - `GE_IMPORT`: a Guitar Pro file imported as if dropped on the window;
 /// - `GE_REBUILD=1`: the screen built again after the scroll, as a setting changed on it does;
 /// - `GE_SIZE`: the window size, `1280x860` by default;
 /// - `GE_SOUND=1`: the clicks of the metronome out loud.
@@ -76,6 +77,7 @@ mod snapshot {
         let screen = match std::env::var("GE_SCREEN").unwrap_or_default().as_str() {
             "drills" => Screen::Drills,
             "scales" => Screen::Scales,
+            "songs" => Screen::Songs,
             "drill" => Screen::Drill,
             "learn" => Screen::Learn,
             "find" => Screen::Find,
@@ -103,7 +105,14 @@ mod snapshot {
         mut settings: ResMut<Settings>,
         mut metronome: ResMut<Metronome>,
         mut selected: ResMut<SelectedLevel>,
+        mut incoming: ResMut<guitar_exercises::library::Incoming>,
     ) {
+        if let Ok(path) = std::env::var("GE_IMPORT")
+            && let Ok(bytes) = std::fs::read(&path)
+        {
+            let name = std::path::Path::new(&path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+            incoming.0.push((name, bytes));
+        }
         let catalog = settings.catalog();
         selected.0 = std::env::var("GE_EXERCISE")
             .ok()

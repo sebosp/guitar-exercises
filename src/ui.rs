@@ -18,6 +18,8 @@ pub enum Screen {
     Drills,
     /// The scale exercises.
     Scales,
+    /// The Guitar Pro songs.
+    Songs,
     /// A drill being played.
     Drill,
     Learn,

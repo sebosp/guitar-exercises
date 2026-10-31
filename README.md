@@ -62,6 +62,13 @@ The scales have their own page (from the menu, or the drills page): the runs and
 the notes of the scale in every order, like the fingers: windows of 2, 3 or 4 notes played as
 2-1 (2 1, 3 2, 4 3...), 1-3-2 (1 3 2, 2 4 3...), 1-3-2-4 and the 23 orders of 4 notes.
 
+### Statistics and help
+
+As in claudralingo: the streak of days with the daily goal of minutes met (10 by default, the
+minutes counted between the notes played), today, the notes a minute and the accuracy of the last
+30 days, the calendars of two months, the rounds by type, then every drill and note. The help
+opens on the first start, from the menu and with F1.
+
 ### Stars, tiers and the extra exercises
 
 A round earns a star for 80% of the notes right, two for 90%, three for all of them; a star opens
@@ -73,6 +80,17 @@ the lowest accuracy), unlock a level at random.
 
 The extra exercises appear at 30 stars: the scales skipping 3 strings or more (more than four
 strings apart), the wider gaps, the bigger shifts.
+
+### Songs
+
+Guitar Pro files (GP3, GP4, GP5, GP6 `.gpx`, GP7 and later `.gp`, read with the `guitarpro`
+crate), dropped on the window, opened with the dialog (the desktops and the browser), or copied to
+the `songs` folder of the saves (the way in on Android). A song is played a section at a time: its
+markers, or a few bars at a time, and the whole song; the track is chosen when the file has
+several. The tablature, the fretboard and the staff show the notes of the score; a chord shows its
+highest note and any of its notes is right. The speed is a percent of the tempo of the score, from
+60% up to the target (100%, or more to play it faster than written), with the same rules as the
+tempo of the drills, the notes checked against the rhythm of the score.
 
 ### Learn notes (staff to fretboard)
 

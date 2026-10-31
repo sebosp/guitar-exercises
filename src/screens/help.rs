@@ -38,7 +38,7 @@ const ZOOM: &str = if cfg!(target_os = "macos") {
 fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>) {
     let fonts = &*fonts;
     let goal = settings.daily_goal_minutes;
-    let sections: [(&str, String); 6] = [
+    let sections: [(&str, String); 7] = [
         (
             "Playing",
             "Play the note on the instrument, or tap it on the fretboard. The microphone listens when it is on in the settings; a pickup or an audio interface hears best. A pause shows where the next note is and with which finger.".to_string(),
@@ -54,6 +54,10 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>) {
         (
             "Tiers",
             "The pips of a level are its fastest clean round, in notes a minute: Basic for a clean round, Medium from 160, Advanced from 240, Legendary from 360.".to_string(),
+        ),
+        (
+            "Songs",
+            "Drop a Guitar Pro file on the window, or open one, then play a section of it at a time. The speed starts at 60% of the score's tempo and goes up 5% after each clean round, up to the target: set it to 110% or 120% to play it faster than written.".to_string(),
         ),
         (
             "Streak",

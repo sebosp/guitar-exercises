@@ -147,6 +147,24 @@ pub fn notes_in_time(hits: &[f32], slot: f32) -> usize {
         .count()
 }
 
+/// The notes of a song played in time: `hits` are the times of the right notes in seconds,
+/// `expected` the times of the same notes in the score in quarter notes, `quarter` the seconds
+/// of a quarter note at the tempo played. As for the drills, the place of each note is measured
+/// from the player's own average delay.
+pub fn notes_in_rhythm(hits: &[f32], expected: &[f32], quarter: f32) -> usize {
+    let offsets: Vec<f32> = hits.iter().zip(expected).map(|(t, e)| t - e * quarter).collect();
+    if offsets.is_empty() {
+        return 0;
+    }
+    let mut sorted = offsets.clone();
+    sorted.sort_by(f32::total_cmp);
+    let median = sorted[sorted.len() / 2];
+    // A fifth of the shortest gap between two notes, 60 to 120 ms.
+    let gap = expected.windows(2).map(|w| (w[1] - w[0]) * quarter).filter(|g| *g > 0.0).fold(f32::MAX, f32::min);
+    let tolerance = if gap == f32::MAX { 0.12 } else { (0.2 * gap).clamp(0.06, 0.12) };
+    offsets.iter().filter(|o| (*o - median).abs() <= tolerance).count()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -182,6 +200,18 @@ mod tests {
         set_tempo(&mut r, MIN_BPM, 120);
         after_round(&mut r, false);
         assert_eq!(after_round(&mut r, false), TempoChange::Slower(MIN_BPM));
+    }
+
+    #[test]
+    fn rhythm() {
+        // Quarter, eighth, eighth, half at 120 BPM (half a second a quarter), 80 ms late.
+        let expected = [0.0, 1.0, 1.5, 2.0, 4.0];
+        let hits: Vec<f32> = expected.iter().map(|e| 10.0 + e * 0.5 + 0.08).collect();
+        assert_eq!(notes_in_rhythm(&hits, &expected, 0.5), 5);
+        // The eighths played as quarters: the rest drifts.
+        let even: Vec<f32> = (0..5).map(|i| 10.0 + i as f32 * 0.5).collect();
+        assert!(notes_in_rhythm(&even, &expected, 0.5) < 4);
+        assert_eq!(notes_in_rhythm(&[], &[], 0.5), 0);
     }
 
     #[test]

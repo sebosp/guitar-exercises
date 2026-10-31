@@ -17,9 +17,10 @@ impl Plugin for MenuPlugin {
     }
 }
 
-const ENTRIES: [(&str, &str, Screen); 7] = [
+const ENTRIES: [(&str, &str, Screen); 8] = [
     ("Finger drills", "The four fingers in every order, wider spans, string crossings, stretches", Screen::Drills),
     ("Scales", "Any scale and mode as runs, sequences and the notes in every order", Screen::Scales),
+    ("Songs", "Your Guitar Pro files, a section at a time, slow to full speed", Screen::Songs),
     ("Learn notes", "Read a note on the staff, find it on the fretboard, play it", Screen::Learn),
     ("Find them all", "Tap every place of a note on the fretboard", Screen::Find),
     ("Statistics", "Your days, your streak, your speed and accuracy", Screen::Stats),

@@ -94,6 +94,8 @@ pub enum Kind {
     Shifts {
         growth: u8,
     },
+    /// A section of a song of the library, see [`crate::library`]: its steps come from there.
+    Song,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -390,6 +392,7 @@ impl Catalog {
                 gap_shape(gap, instrument.frets).map(|s| shape_steps(&s, [1, 2, 3, 4], instrument, shifts)).unwrap_or_default()
             }
             Kind::Shifts { growth } => shift_steps(growth, instrument),
+            Kind::Song => Vec::new(),
         }
     }
 }

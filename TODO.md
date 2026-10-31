@@ -26,6 +26,14 @@ yet or not verified, the rest are suggestions.
 - [ ] The timing check of the drills with real playing: the tolerance (20% of a slot, 60 to 120 ms)
       and the 80% goal, with the microphone delay and with taps.
 
+## Songs
+
+- [ ] Choose any range of bars, not only the sections.
+- [ ] The repeats and the endings of the score, the tempo changes inside a section, the fingering
+      of the file when it has one, a play-along sound of the score.
+- [ ] An open dialog on Android (the songs folder only for now); the drop of a file in a real
+      browser, not tested yet.
+
 ## Drills
 
 - [ ] The metronome: show each note early or late against the beat, a count-in bar, accents per

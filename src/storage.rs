@@ -23,6 +23,17 @@ pub fn save<T: Serialize>(name: &str, value: &T) {
     }
 }
 
+/// Forgets a saved value.
+pub fn remove(name: &str) {
+    backend::remove(name);
+}
+
+/// The folder whose Guitar Pro files are imported, on the devices with files.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn songs_folder() -> Option<std::path::PathBuf> {
+    backend::config_dir().map(|dir| dir.join("songs"))
+}
+
 pub fn now_unix_seconds() -> u64 {
     #[cfg(target_arch = "wasm32")]
     {
@@ -69,6 +80,12 @@ mod backend {
         std::fs::read_to_string(config_dir()?.join(format!("{name}.json"))).ok()
     }
 
+    pub fn remove(name: &str) {
+        if let Some(dir) = config_dir() {
+            let _ = std::fs::remove_file(dir.join(format!("{name}.json")));
+        }
+    }
+
     pub fn write(name: &str, json: &str) {
         let Some(dir) = config_dir() else {
             warn!("No configuration directory, the {name} is not saved");
@@ -92,6 +109,12 @@ mod backend {
 
     pub fn read(name: &str) -> Option<String> {
         local_storage()?.get_item(&format!("guitar-exercises.{name}")).ok().flatten()
+    }
+
+    pub fn remove(name: &str) {
+        if let Some(storage) = local_storage() {
+            let _ = storage.remove_item(&format!("guitar-exercises.{name}"));
+        }
     }
 
     pub fn write(name: &str, json: &str) {

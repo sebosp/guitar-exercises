@@ -8,6 +8,7 @@ pub mod help;
 pub mod learn;
 pub mod menu;
 pub mod settings;
+pub mod songs;
 pub mod stats;
 
 /// The note the current game waits for, for the tests that play by themselves.
@@ -30,6 +31,7 @@ impl Plugin for ScreensPlugin {
             find::FindPlugin,
             stats::StatsPlugin,
             help::HelpPlugin,
+            songs::SongsPlugin,
         ));
     }
 }
