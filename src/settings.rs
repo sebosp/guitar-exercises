@@ -35,6 +35,9 @@ pub struct Settings {
     pub metronome: bool,
     /// The drill notes per beat of the metronome: 1 quarter notes, 2 eighths, 4 sixteenths.
     pub notes_per_beat: u8,
+    pub theme: crate::theme::Theme,
+    /// The scale of the scale exercises.
+    pub scale: crate::scales::Scale,
 }
 
 impl Default for Settings {
@@ -74,11 +77,18 @@ impl Settings {
             clear_streak: 3,
             metronome: true,
             notes_per_beat: 1,
+            theme: crate::theme::Theme::Dark,
+            scale: crate::scales::Scale::default(),
         }
     }
 
     pub fn instrument(&self) -> Instrument {
         Instrument::tuned(self.instrument, self.strings, &self.tuning, self.frets)
+    }
+
+    /// Every exercise of the drills page for this instrument and scale.
+    pub fn catalog(&self) -> crate::exercises::Catalog {
+        crate::exercises::catalog(&self.instrument(), self.scale)
     }
 
     /// The RMS level of the microphone gate.
@@ -108,11 +118,13 @@ impl Settings {
         self.drill_shifts = self.drill_shifts.clamp(1, 6);
         self.clear_streak = self.clear_streak.clamp(1, 10);
         self.notes_per_beat = self.notes_per_beat.clamp(1, 4);
+        self.scale = self.scale.sanitized();
     }
 
     pub fn load() -> Self {
         let mut settings: Settings = crate::storage::load("settings").unwrap_or_default();
         settings.sanitize();
+        crate::theme::set(settings.theme);
         settings
     }
 

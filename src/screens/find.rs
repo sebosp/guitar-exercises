@@ -111,9 +111,9 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>, pro
         })
         .with_children(|body| {
             spawn_note_header(body, clef, |info| {
-                info.spawn((label("", fonts.bold(26.0), colors::TEXT), InfoText));
-                info.spawn((label("", fonts.text(17.0), colors::REVEAL), HintText));
-                info.spawn((label("", fonts.text(15.0), colors::DIM), ScoreText));
+                info.spawn((label("", fonts.bold(26.0), colors::text()), InfoText));
+                info.spawn((label("", fonts.text(17.0), colors::reveal()), HintText));
+                info.spawn((label("", fonts.text(15.0), colors::dim()), ScoreText));
             });
             spawn_fretboard(body, &instrument, settings.left_handed, fonts);
         });
@@ -191,15 +191,15 @@ fn render(
     *expected = Expected { midi: Some(note.midi()), position: missing.first().copied() };
     if let Ok(staff) = staffs.single() {
         let letters = if find.hint >= 1 || done { Letters::All } else { Letters::None };
-        draw_staff(&mut commands, staff, &StaffDrawing { note: Some(written), color: done.then_some(colors::OK), letters }, &fonts);
+        draw_staff(&mut commands, staff, &StaffDrawing { note: Some(written), color: done.then_some(colors::ok()), letters }, &fonts);
     }
     if let Ok(layer) = layers.single() {
-        let mut marks: Vec<Mark> = find.found.iter().map(|&p| Mark::new(p, note.name(), colors::OK)).collect();
+        let mut marks: Vec<Mark> = find.found.iter().map(|&p| Mark::new(p, note.name(), colors::ok())).collect();
         let flats = note.accidental == Accidental::Flat;
-        marks.extend(find.wrong.iter().map(|&p| Mark::new(p, Spelled::from_midi(find.instrument.midi_at(p), flats).name(), colors::BAD)));
+        marks.extend(find.wrong.iter().map(|&p| Mark::new(p, Spelled::from_midi(find.instrument.midi_at(p), flats).name(), colors::bad())));
         // From the second hint on, one more missing place each time.
         let shown = (find.hint as usize).saturating_sub(1);
-        marks.extend(missing.iter().take(shown).map(|&p| Mark::new(p, "?", colors::REVEAL).pulse()));
+        marks.extend(missing.iter().take(shown).map(|&p| Mark::new(p, "?", colors::reveal()).pulse()));
         set_marks(&mut commands, layer, &marks, &fonts);
     }
     let info = if done {

@@ -50,10 +50,10 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>) {
         ))
         .observe(crate::ui::scroll_on_wheel)
         .with_children(|column| {
-            column.spawn(label(subtitle, fonts.text(17.0), colors::DIM));
+            column.spawn(label(subtitle, fonts.text(17.0), colors::dim()));
             for (name, description, screen) in ENTRIES {
                 column
-                    .spawn(button_frame(colors::BUTTON))
+                    .spawn(button_frame(colors::button()))
                     .insert(Node {
                         width: px(440),
                         max_width: percent(100),
@@ -64,8 +64,8 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>) {
                         ..default()
                     })
                     .with_children(|b| {
-                        b.spawn(label(name, fonts.bold(21.0), colors::TEXT));
-                        b.spawn(label(description, fonts.text(15.0), colors::DIM));
+                        b.spawn(label(name, fonts.bold(21.0), colors::text()));
+                        b.spawn(label(description, fonts.text(15.0), colors::dim()));
                     })
                     .observe(move |_: On<PointerClick>, mut next: ResMut<NextState<Screen>>| {
                         next.set(screen);

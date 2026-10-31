@@ -17,6 +17,8 @@ yet or not verified, the rest are suggestions.
 - [ ] The metronome through a speaker with the microphone on: that the clicks (noise bursts) are
       never heard as notes and do not break the onsets of a ringing note; the clicks in the
       browser (Web Audio, scheduled ahead) and on Android (cpal AAudio output).
+- [ ] The scale fingerings with real hands, the wide ones of the harmonic minor modes; the repeated
+      notes of the sequences (1 2, 2 3) heard as two plucks by the microphone.
 - [ ] The timing check of the drills with real playing: the tolerance (20% of a slot, 60 to 120 ms)
       and the 80% goal, with the microphone delay and with taps.
 
@@ -25,8 +27,9 @@ yet or not verified, the rest are suggestions.
 - [ ] The metronome: show each note early or late against the beat, a count-in bar, accents per
       group of notes per beat.
 - [ ] Positions up the neck: the same level at frets 5, 7, 9, 12, the spider walk all the way up and
-      back.
-- [ ] More shapes: three fingers per string (scales), the pinky anchor, legato (hammer-ons and
+      back; the scales from each degree (the 7 positions of three notes per string).
+- [ ] The scales: the box (CAGED) fingerings, intervals (thirds, fourths), the arpeggios.
+- [ ] More shapes: the pinky anchor, legato (hammer-ons and
       pull-offs: one pluck, several notes), string skipping with every finger.
 - [ ] Alternate picking: down and up strokes shown in the tablature.
 - [ ] A free mode: pick the fingers, the frets and the strings.
@@ -46,7 +49,7 @@ yet or not verified, the rest are suggestions.
 
 ## Interface
 
-- [ ] A light theme and larger text options; the colors of the fingers are already color blind safe.
+- [ ] Larger text options; the colors of the fingers are already color blind safe.
 - [ ] A keyboard and gamepad way to tap the fretboard.
 - [ ] Animations: the notes sliding in the tablature, confetti when a level is done.
 - [ ] A tuner screen of its own (the settings and the drills have one).

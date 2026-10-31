@@ -5,18 +5,22 @@
 use bevy::prelude::*;
 
 pub mod audio;
+pub mod diagram;
 pub mod drills;
+pub mod exercises;
 pub mod fretboard;
 pub mod learn;
 pub mod metronome;
 pub mod music;
 pub mod pitch;
 pub mod progress;
+pub mod scales;
 pub mod screens;
 pub mod settings;
 pub mod staff;
 pub mod storage;
 pub mod tempo;
+pub mod theme;
 pub mod tuner;
 pub mod ui;
 

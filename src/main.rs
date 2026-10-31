@@ -26,7 +26,7 @@ fn main() {
 /// exits, to check the screens without a person at the instrument:
 ///
 /// - `GE_SCREEN`: menu, drills, drill, learn, find, settings or stats;
-/// - `GE_LEVEL`: the drill level;
+/// - `GE_LEVEL`: the drill, by its place on the drills page, or `GE_EXERCISE` by its key;
 /// - `GE_PLAY`: the notes played right (heard by the "microphone"), `GE_TAP` tapped right,
 ///   `GE_MISS` wrong notes heard;
 /// - `GE_WAIT`: seconds to wait after them, for the hints;
@@ -89,12 +89,21 @@ mod snapshot {
             wait: var("GE_WAIT", 0.0),
             scroll: var("GE_SCROLL", 0.0),
         })
-        .insert_resource(SelectedLevel(var("GE_LEVEL", 0)))
         .add_systems(Startup, setup)
         .add_systems(Update, run);
     }
 
-    fn setup(mut window: Single<&mut Window, With<PrimaryWindow>>, mut settings: ResMut<Settings>, mut metronome: ResMut<Metronome>) {
+    fn setup(
+        mut window: Single<&mut Window, With<PrimaryWindow>>,
+        mut settings: ResMut<Settings>,
+        mut metronome: ResMut<Metronome>,
+        mut selected: ResMut<SelectedLevel>,
+    ) {
+        let catalog = settings.catalog();
+        selected.0 = std::env::var("GE_EXERCISE")
+            .ok()
+            .or_else(|| catalog.exercises().nth(var("GE_LEVEL", 0)).map(|e| e.key.clone()))
+            .unwrap_or_default();
         // A window in the background is throttled by the compositor with vsync.
         window.present_mode = bevy::window::PresentMode::AutoNoVsync;
         let size = std::env::var("GE_SIZE").unwrap_or_default();

@@ -6,6 +6,7 @@ use bevy::prelude::*;
 
 use crate::music::{InstrumentKind, RETUNE_RANGE, TuningPreset, midi_name};
 use crate::settings::Settings;
+use crate::theme::Theme;
 use crate::ui::{Btn, Fonts, Screen, button, button_frame, colors, label, screen_root, scroll_area, small_button, spawn_top_bar};
 
 pub struct SettingsScreenPlugin;
@@ -37,6 +38,10 @@ struct StringName(usize);
 #[derive(Component)]
 struct StringNote(usize);
 
+/// A theme button, highlighted when it is the theme.
+#[derive(Component)]
+struct ThemeChoice(Theme);
+
 /// The most strings of an instrument, the rows spawned.
 const MAX_STRINGS: usize = 8;
 
@@ -52,7 +57,7 @@ fn row<'a>(parent: &'a mut ChildSpawnerCommands, name: &str, fonts: &Fonts) -> E
         ..default()
     });
     row.with_children(|r| {
-        r.spawn((Node { width: px(230), ..default() }, children![label(name, fonts.text(18.0), colors::TEXT)]));
+        r.spawn((Node { width: px(230), ..default() }, children![label(name, fonts.text(18.0), colors::text())]));
     });
     row
 }
@@ -69,7 +74,7 @@ fn stepper(parent: &mut ChildSpawnerCommands, name: &str, fonts: &Fonts, shows: 
         r.spawn(small_button("-", fonts)).observe(move |_: On<PointerClick>, mut s: ResMut<Settings>| apply(&mut s, down));
         r.spawn((
             Node { min_width: px(110), justify_content: JustifyContent::Center, ..default() },
-            children![(label("", fonts.bold(18.0), colors::ACCENT), Shows(shows))],
+            children![(label("", fonts.bold(18.0), colors::accent()), Shows(shows))],
         ));
         r.spawn(small_button("+", fonts)).observe(move |_: On<PointerClick>, mut s: ResMut<Settings>| apply(&mut s, up));
     });
@@ -80,7 +85,7 @@ fn choices(parent: &mut ChildSpawnerCommands, name: &str, fonts: &Fonts, options
     row(parent, name, fonts).with_children(|r| {
         for (text, chosen, change) in options {
             let change = *change;
-            r.spawn((button(*text, fonts, colors::BUTTON), Chosen(chosen.0)))
+            r.spawn((button(*text, fonts, colors::button()), Chosen(chosen.0)))
                 .observe(move |_: On<PointerClick>, mut s: ResMut<Settings>| apply(&mut s, change));
         }
     });
@@ -88,10 +93,10 @@ fn choices(parent: &mut ChildSpawnerCommands, name: &str, fonts: &Fonts, options
 
 fn toggle(parent: &mut ChildSpawnerCommands, name: &str, fonts: &Fonts, is_on: fn(&Settings) -> bool, flip: Change) {
     row(parent, name, fonts).with_children(|r| {
-        r.spawn((button_frame(colors::BUTTON), Chosen(is_on)))
+        r.spawn((button_frame(colors::button()), Chosen(is_on)))
             .observe(move |_: On<PointerClick>, mut s: ResMut<Settings>| apply(&mut s, flip))
             .with_children(|b| {
-                b.spawn((label("", fonts.text(18.0), colors::TEXT), Shows(|_| String::new())));
+                b.spawn((label("", fonts.text(18.0), colors::text()), Shows(|_| String::new())));
             });
     });
 }
@@ -101,7 +106,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
     commands.spawn(screen_root(Screen::Settings)).with_children(|root| {
         spawn_top_bar(root, "Settings", Screen::Settings, fonts);
         root.spawn(scroll_area()).observe(crate::ui::scroll_on_wheel).observe(crate::ui::scroll_on_drag).with_children(|list| {
-            list.spawn(label("Instrument", fonts.bold(20.0), colors::ACCENT));
+            list.spawn(label("Instrument", fonts.bold(20.0), colors::accent()));
             choices(
                 list,
                 "Instrument",
@@ -148,7 +153,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             }
             row(list, "Strings, low to high", fonts).with_children(|r| {
                 r.spawn((
-                    label("", fonts.bold(18.0), colors::ACCENT),
+                    label("", fonts.bold(18.0), colors::accent()),
                     Shows(|s| {
                         let i = s.instrument();
                         (0..i.strings()).map(|n| midi_name(i.open[n])).collect::<Vec<_>>().join("  ")
@@ -158,7 +163,19 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             stepper(list, "Frets", fonts, |s| s.frets.to_string(), |s| s.frets = s.frets.saturating_sub(1), |s| s.frets += 1);
             toggle(list, "Left-handed", fonts, |s| s.left_handed, |s| s.left_handed = !s.left_handed);
 
-            list.spawn(label("Microphone", fonts.bold(20.0), colors::ACCENT));
+            list.spawn(label("Look", fonts.bold(20.0), colors::accent()));
+            row(list, "Theme", fonts).with_children(|r| {
+                for theme in Theme::ALL {
+                    r.spawn((button(theme.name(), fonts, colors::button()), ThemeChoice(theme))).observe(
+                        move |_: On<PointerClick>, mut s: ResMut<Settings>| {
+                            s.theme = theme;
+                            s.save();
+                        },
+                    );
+                }
+            });
+
+            list.spawn(label("Microphone", fonts.bold(20.0), colors::accent()));
             toggle(list, "Listen to the instrument", fonts, |s| s.microphone, |s| s.microphone = !s.microphone);
             stepper(
                 list,
@@ -170,7 +187,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             );
             row(list, "Tuner, to the strings", fonts).with_children(|r| crate::tuner::spawn_tuner(r, fonts, true));
 
-            list.spawn(label("Games", fonts.bold(20.0), colors::ACCENT));
+            list.spawn(label("Games", fonts.bold(20.0), colors::accent()));
             stepper(list, "Hint after", fonts, |s| format!("{:.0} s", s.hint_delay), |s| s.hint_delay -= 1.0, |s| s.hint_delay += 1.0);
             stepper(
                 list,
@@ -192,7 +209,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             );
 
             list.spawn(Node { height: px(8), ..default() });
-            list.spawn(button("Reset to the defaults", fonts, colors::BUTTON))
+            list.spawn(button("Reset to the defaults", fonts, colors::button()))
                 .insert(Node {
                     align_self: AlignSelf::Start,
                     padding: UiRect::axes(px(16), px(9)),
@@ -205,7 +222,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             list.spawn(label(
                 "Saved on this device. The progress is kept per instrument and number of strings.",
                 fonts.text(15.0),
-                colors::DIM,
+                colors::dim(),
             ));
         });
     });
@@ -235,11 +252,11 @@ fn string_row(parent: &mut ChildSpawnerCommands, string: usize, fonts: &Fonts) {
             StringRow(string),
         ))
         .with_children(|r| {
-            r.spawn((Node { width: px(230), ..default() }, children![(label("", fonts.text(18.0), colors::TEXT), StringName(string))]));
+            r.spawn((Node { width: px(230), ..default() }, children![(label("", fonts.text(18.0), colors::text()), StringName(string))]));
             r.spawn(small_button("-", fonts)).observe(move |_: On<PointerClick>, mut s: ResMut<Settings>| apply_retune(&mut s, string, -1));
             r.spawn((
                 Node { min_width: px(110), justify_content: JustifyContent::Center, ..default() },
-                children![(label("", fonts.bold(18.0), colors::ACCENT), StringNote(string))],
+                children![(label("", fonts.bold(18.0), colors::accent()), StringNote(string))],
             ));
             r.spawn(small_button("+", fonts)).observe(move |_: On<PointerClick>, mut s: ResMut<Settings>| apply_retune(&mut s, string, 1));
         });
@@ -289,23 +306,29 @@ fn refresh_strings(
         };
         let offset = settings.tuning.get(note.0).copied().unwrap_or(0);
         text.0 = if offset == 0 { midi_name(open) } else { format!("{}  ({offset:+})", midi_name(open)) };
-        color.0 = if offset == 0 { colors::ACCENT } else { colors::REVEAL };
+        color.0 = if offset == 0 { colors::accent() } else { colors::reveal() };
     }
 }
 
 fn refresh(
     settings: Res<Settings>,
     mut texts: Query<(&mut Text, &Shows, Option<&ChildOf>)>,
-    mut choices: Query<(Entity, &Chosen, &mut Btn, &mut BackgroundColor)>,
+    mut choices: Query<(Entity, &Chosen, &mut Btn, &mut BackgroundColor), Without<ThemeChoice>>,
+    mut themes: Query<(&ThemeChoice, &mut Btn, &mut BackgroundColor), Without<Chosen>>,
     added: Query<(), Added<Shows>>,
 ) {
     if !settings.is_changed() && added.is_empty() {
         return;
     }
     let mut toggled = Vec::new();
+    for (theme, mut btn, mut bg) in &mut themes {
+        btn.color = if theme.0 == settings.theme { colors::selected() } else { colors::button() };
+        btn.hover = btn.color.mix(&Color::WHITE, 0.12);
+        bg.0 = btn.color;
+    }
     for (entity, chosen, mut btn, mut bg) in &mut choices {
         let on = (chosen.0)(&settings);
-        btn.color = if on { colors::SELECTED } else { colors::BUTTON };
+        btn.color = if on { colors::selected() } else { colors::button() };
         btn.hover = btn.color.mix(&Color::WHITE, 0.12);
         bg.0 = btn.color;
         toggled.push((entity, on));

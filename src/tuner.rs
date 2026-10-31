@@ -48,15 +48,15 @@ pub fn spawn_tuner(parent: &mut ChildSpawnerCommands, fonts: &Fonts, strings: bo
                 flex_shrink: 0.0,
                 ..default()
             },
-            BackgroundColor(colors::PANEL),
+            BackgroundColor(colors::panel()),
             TunerView { strings },
             Pickable::IGNORE,
         ))
         .with_children(|t| {
-            t.spawn((label("-", fonts.bold(30.0), colors::TEXT), TunerNote));
+            t.spawn((label("-", fonts.bold(30.0), colors::text()), TunerNote));
             t.spawn((
                 Node { width: percent(100), height: px(24), border_radius: BorderRadius::all(px(4)), ..default() },
-                BackgroundColor(colors::BUTTON),
+                BackgroundColor(colors::button()),
                 Pickable::IGNORE,
             ))
             .with_children(|track| {
@@ -73,7 +73,7 @@ pub fn spawn_tuner(parent: &mut ChildSpawnerCommands, fonts: &Fonts, strings: bo
                             top: percent(if center { 0.0 } else { 30.0 }),
                             ..default()
                         },
-                        BackgroundColor(if center { colors::OK } else { colors::DIM.with_alpha(0.5) }),
+                        BackgroundColor(if center { colors::ok() } else { colors::dim().with_alpha(0.5) }),
                         Pickable::IGNORE,
                     ));
                 }
@@ -88,12 +88,12 @@ pub fn spawn_tuner(parent: &mut ChildSpawnerCommands, fonts: &Fonts, strings: bo
                         display: Display::None,
                         ..default()
                     },
-                    BackgroundColor(colors::ACCENT),
+                    BackgroundColor(colors::accent()),
                     TunerNeedle,
                     Pickable::IGNORE,
                 ));
             });
-            t.spawn((label("", fonts.text(14.0), colors::DIM), TunerDetail));
+            t.spawn((label("", fonts.text(14.0), colors::dim()), TunerDetail));
         });
 }
 
@@ -171,22 +171,22 @@ fn update(
     let (note, detail, color) = match (&reading, &mic.status) {
         (Some(r), _) => {
             let color = if r.cents.abs() <= 5.0 {
-                colors::OK
+                colors::ok()
             } else if r.cents.abs() <= 15.0 {
-                colors::ACCENT
+                colors::accent()
             } else {
-                colors::BAD
+                colors::bad()
             };
             (r.note.clone(), r.detail.clone(), if fresh { color } else { color.with_alpha(0.5) })
         }
-        (None, MicStatus::Listening) => ("-".into(), "Play a note".into(), colors::DIM),
-        (None, status) => ("-".into(), status.describe(), colors::DIM),
+        (None, MicStatus::Listening) => ("-".into(), "Play a note".into(), colors::dim()),
+        (None, status) => ("-".into(), status.describe(), colors::dim()),
     };
     for (mut text, mut text_color) in &mut notes {
         if text.0 != note {
             text.0 = note.clone();
         }
-        text_color.0 = if reading.is_some() { colors::TEXT } else { colors::DIM };
+        text_color.0 = if reading.is_some() { colors::text() } else { colors::dim() };
     }
     for mut text in &mut details {
         if text.0 != detail {

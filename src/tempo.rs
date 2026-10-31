@@ -17,6 +17,64 @@ pub const TIMING_GOAL: f32 = 0.8;
 /// The misses in a row at a tempo before it goes down.
 pub const MISSES_TO_SLOW_DOWN: u8 = 2;
 
+/// The notes per minute of a clean round for the tiers after Basic: Medium, Advanced, Legendary
+/// (80 BPM in eighths, 120 BPM in eighths, 90 BPM in sixteenths).
+pub const TIER_NOTES_PER_MINUTE: [u32; 3] = [160, 240, 360];
+
+/// The tier of an exercise by its fastest clean round with the metronome, shown as the border
+/// of its tile with the rarity colors of the games.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Tier {
+    Basic,
+    Medium,
+    Advanced,
+    Legendary,
+}
+
+impl Tier {
+    pub const ALL: [Tier; 4] = [Tier::Basic, Tier::Medium, Tier::Advanced, Tier::Legendary];
+
+    pub fn of(record: &DrillRecord) -> Option<Tier> {
+        let npm = record.best_clean_npm;
+        (npm > 0).then(|| match TIER_NOTES_PER_MINUTE.iter().filter(|&&t| npm >= t).count() {
+            0 => Tier::Basic,
+            1 => Tier::Medium,
+            2 => Tier::Advanced,
+            _ => Tier::Legendary,
+        })
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Tier::Basic => "Basic",
+            Tier::Medium => "Medium",
+            Tier::Advanced => "Advanced",
+            Tier::Legendary => "Legendary",
+        }
+    }
+
+    /// The notes per minute it needs, in clean rounds.
+    pub fn threshold(self) -> u32 {
+        match self {
+            Tier::Basic => 1,
+            Tier::Medium => TIER_NOTES_PER_MINUTE[0],
+            Tier::Advanced => TIER_NOTES_PER_MINUTE[1],
+            Tier::Legendary => TIER_NOTES_PER_MINUTE[2],
+        }
+    }
+
+    /// Gray, green, purple and orange, the same in every theme.
+    pub fn color(self) -> bevy::prelude::Color {
+        use bevy::prelude::Color;
+        match self {
+            Tier::Basic => Color::srgb(0.62, 0.64, 0.68),
+            Tier::Medium => Color::srgb(0.30, 0.78, 0.40),
+            Tier::Advanced => Color::srgb(0.66, 0.42, 0.95),
+            Tier::Legendary => Color::srgb(1.0, 0.62, 0.12),
+        }
+    }
+}
+
 /// What a round changed in the tempo.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TempoChange {
@@ -135,6 +193,16 @@ mod tests {
         set_tempo(&mut r, MIN_BPM, 120);
         after_round(&mut r, false);
         assert_eq!(after_round(&mut r, false), TempoChange::Slower(MIN_BPM));
+    }
+
+    #[test]
+    fn tiers() {
+        let tier = |npm| Tier::of(&DrillRecord { best_clean_npm: npm, ..Default::default() });
+        assert_eq!(tier(0), None);
+        assert_eq!(tier(60), Some(Tier::Basic));
+        assert_eq!(tier(160), Some(Tier::Medium));
+        assert_eq!(tier(300), Some(Tier::Advanced));
+        assert_eq!(tier(400), Some(Tier::Legendary));
     }
 
     #[test]

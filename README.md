@@ -26,9 +26,10 @@ The levels are grouped by hand shape, from the easiest:
 | 7     | Wide span                      | 5 7 9 10, higher on the neck where the frets are close |
 | 8     | Index anchor, skip two strings | index on a string, the others three strings higher     |
 
-Each group has the 24 orders of the fingers, 1-2-3-4 and 4-3-2-1 first, then the orders with the
-smallest jumps between fingers. 90% accuracy completes a level and opens the next order; three
-orders done open the next group. The accuracy and the speed (notes per minute) are recorded. A pause
+Each group has the 6 orders of the fingers that are not rotations of each other (1-2-3-4, 2-3-4-1,
+3-4-1-2 and 4-1-2-3 loop into the same pattern), 1-2-3-4 and 4-3-2-1 first. A small diagram shows
+each shape: the frets, and a dot of the finger's color on each one played (the fingers have the
+same colors everywhere, in every theme). The accuracy and the speed (notes per minute) are recorded. A pause
 longer than the hint delay names the finger, the fret and the string, and the note pulses. Next to
 the tablature the current note is on the staff with its name, and a tuner shows what the
 microphone hears.
@@ -41,6 +42,33 @@ clicks is not). After a clean round the tempo goes up 5 BPM, up to the target; a
 target completes the lesson, and the target can be raised. After a round under the goal the tempo
 stays, after a second one in a row it goes down 5 BPM. The clicks are short bursts of noise, without
 a pitch for the microphone to hear as a note.
+
+### Scales
+
+A scale chosen on the page (the root, the family: major, harmonic minor, melodic minor or
+pentatonic, and the mode: Dorian, Phrygian dominant, Lydian augmented...) played three notes per
+string (two for the pentatonics) from its root on the lowest string, the fingers of the position
+shown. Each row has a run (1 2 3 4 5...) and the sequences in groups of 2 to 6 notes (1 2, 2 3,
+3 4... then 1 2 3, 2 3 4...), up and back down (6 5 4, 5 4 3...). The rows play the position on
+adjacent strings, then skipping 1 string, then 2 strings (the low E, D and B, then the A, G and
+high e). Each scale and mode keeps its own progress.
+
+### Stretches
+
+Growing gaps: the four fingers 2 frets apart on one string. Growing shifts: one finger per fret
+moving up the neck by jumps that grow (fret 1, 3, 6...), back down on the next string.
+
+### Stars, tiers and the extra exercises
+
+A round earns a star for 80% of the notes right, two for 90%, three for all of them; a star opens
+the next exercise of the row, three in a row open the next row. The border of a tile is the tier
+of the fastest clean round with the metronome, in notes per minute (the tempo times the notes per
+beat), with the rarity colors of the games: Basic (gray), Medium (green, 160), Advanced (purple,
+240), Legendary (orange, 360). Two buttons: practice the weakest exercise (the fewest stars, then
+the lowest accuracy), unlock a level at random.
+
+The extra exercises appear at 30 stars: the scales skipping 3 strings or more (more than four
+strings apart), the wider gaps, the bigger shifts.
 
 ### Learn notes (staff to fretboard)
 
@@ -69,7 +97,8 @@ shows the letters of the staff, then the places left one by one.
 
 ### Settings and statistics
 
-The instrument (guitar 6 to 8 strings, bass 4 to 6), the tuning (standard, drop, half step down,
+The theme (dark, light, Catppuccin Mocha and Latte, Tokyo Night, Storm and Day, Gruvbox, Nord,
+Dracula), the instrument (guitar 6 to 8 strings, bass 4 to 6), the tuning (standard, drop, half step down,
 or each string a semitone up or down, a 5-string bass with its low string in A for one), the frets
 (12 by default, up to 24), left-handed, the microphone with its noise gate and a tuner to the open
 strings, the hint delay, the drill length, the note names in the drills, the sharps and flats, the

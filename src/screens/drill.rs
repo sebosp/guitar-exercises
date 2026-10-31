@@ -11,23 +11,24 @@ use bevy::picking::events::PointerClick;
 use bevy::prelude::*;
 
 use crate::audio::NoteHeard;
-use crate::drills::{FINGER_NAMES, Level, Step, is_unlocked, levels, steps};
+use crate::drills::{FINGER_NAMES, SHAPES, Step, gap_shape};
+use crate::exercises::{Catalog, Exercise, Kind, group_example, skip_name, stars};
 use crate::fretboard::{FretTapped, Mark, MarksLayer, set_marks, spawn_fretboard};
 use crate::metronome::{BEATS_PER_BAR, Metronome};
 use crate::music::{Instrument, Spelled, midi_name};
 use crate::progress::Progress;
 use crate::screens::Expected;
-use crate::screens::drills::{SelectedLevel, shape_description};
+use crate::screens::drills::SelectedLevel;
 use crate::settings::Settings;
 use crate::staff::{StaffDrawing, StaffView, draw_staff, spawn_staff};
 use crate::storage::now_unix_seconds;
 use crate::tempo::{BPM_STEP, TIMING_GOAL, TempoChange, after_round, notes_in_time, set_tempo, tempo_of};
 use crate::ui::{
-    Btn, Fonts, Screen, button, button_frame, colors, label, percent_text, screen_root, scroll_area, small_button, spawn_top_bar,
+    Btn, Fonts, Icons, Screen, button, button_frame, colors, label, percent_text, screen_root, scroll_area, small_button, spawn_top_bar,
 };
 
-/// The accuracy that completes a level.
-pub const GOAL: f32 = 0.9;
+/// The accuracy of a clean round with the metronome: two stars.
+pub const GOAL: f32 = crate::exercises::STAR_ACCURACY[1];
 /// The columns of the tablature.
 const TAB_COLUMNS: usize = 16;
 
@@ -46,7 +47,8 @@ impl Plugin for DrillPlugin {
 
 #[derive(Resource)]
 struct Drill {
-    level: Level,
+    exercise: Exercise,
+    catalog: Catalog,
     instrument: Instrument,
     steps: Vec<Step>,
     index: usize,
@@ -163,7 +165,7 @@ impl Round<'_, '_> {
 
     /// A new tempo or target for this drill, saved; the round starts again.
     fn retempo(&mut self, progress: &mut Progress, settings: &Settings, bpm: u32, target: u32) {
-        let record = progress.of(&settings.instrument().key()).drills.entry(self.drill.level.id).or_default();
+        let record = progress.of(&settings.instrument().key()).exercises.entry(self.drill.exercise.key.clone()).or_default();
         set_tempo(record, bpm, target);
         (self.drill.bpm, self.drill.target) = tempo_of(record);
         progress.save();
@@ -183,14 +185,15 @@ fn spawn(
     real: Res<Time<Real>>,
 ) {
     let fonts = &*fonts;
-    let all = levels();
-    let level = all[selected.0.min(all.len() - 1)];
+    let catalog = settings.catalog();
+    let exercise = catalog.find(&selected.0).or_else(|| catalog.exercises().next()).cloned().expect("exercises");
     let instrument = settings.instrument();
-    let steps = steps(&level, &instrument, settings.drill_shifts);
-    let record = progress.get(&instrument.key()).and_then(|p| p.drills.get(&level.id)).cloned().unwrap_or_default();
+    let steps = catalog.steps(&exercise, &instrument, settings.drill_shifts);
+    let record = progress.get(&instrument.key()).and_then(|p| p.exercises.get(&exercise.key)).cloned().unwrap_or_default();
     let (bpm, target) = tempo_of(&record);
     commands.insert_resource(Drill {
-        level,
+        exercise: exercise.clone(),
+        catalog: catalog.clone(),
         instrument: instrument.clone(),
         steps,
         index: 0,
@@ -210,26 +213,9 @@ fn spawn(
     metronome.bpm = bpm;
     metronome.restart(real.elapsed_secs_f64());
     commands.spawn((screen_root(Screen::Drill), DrillRoot)).with_children(|root| {
-        spawn_top_bar(root, &format!("Drill {}: {}", level.id % 24 + 1, level.name()), Screen::Drill, fonts);
+        spawn_top_bar(root, &exercise.name, Screen::Drill, fonts);
         root.spawn(scroll_area()).observe(crate::ui::scroll_on_wheel).observe(crate::ui::scroll_on_drag).with_children(|body| {
-            body.spawn(Node {
-                flex_direction: FlexDirection::Row,
-                flex_wrap: FlexWrap::Wrap,
-                column_gap: px(14),
-                row_gap: px(4),
-                align_items: AlignItems::Center,
-                ..default()
-            })
-            .with_children(|row| {
-                row.spawn(label(shape_description(level.group), fonts.text(16.0), colors::DIM));
-                for (finger, name) in FINGER_NAMES.iter().enumerate().skip(1) {
-                    row.spawn((
-                        Node { padding: UiRect::axes(px(8), px(2)), border_radius: BorderRadius::all(px(10)), ..default() },
-                        BackgroundColor(colors::FINGERS[finger]),
-                        children![label(format!("{finger} {name}"), fonts.bold(14.0), Color::WHITE)],
-                    ));
-                }
-            });
+            spawn_description(body, &exercise, &catalog, &instrument, fonts);
             spawn_metronome_panel(body, fonts);
             // The note three ways: the tablature, the staff, and what the microphone hears.
             body.spawn(Node {
@@ -246,19 +232,72 @@ fn spawn(
                 row.spawn(Node { flex_direction: FlexDirection::Column, align_items: AlignItems::Center, row_gap: px(4), ..default() })
                     .with_children(|column| {
                         spawn_staff(column, instrument.kind.clef());
-                        column.spawn((label("", fonts.bold(16.0), colors::TEXT), NoteCaption));
+                        column.spawn((label("", fonts.bold(16.0), colors::text()), NoteCaption));
                     });
                 crate::tuner::spawn_tuner(row, fonts, false);
             });
-            body.spawn((label("", fonts.bold(18.0), colors::TEXT), StatusText));
-            body.spawn((label("", fonts.text(17.0), colors::ACCENT), FeedbackText));
+            body.spawn((label("", fonts.bold(18.0), colors::text()), StatusText));
+            body.spawn((label("", fonts.text(17.0), colors::accent()), FeedbackText));
             spawn_fretboard(body, &instrument, settings.left_handed, fonts);
             body.spawn(Node { flex_direction: FlexDirection::Row, column_gap: px(10), flex_shrink: 0.0, ..default() }).with_children(
                 |row| {
-                    row.spawn(button("Restart", fonts, colors::BUTTON)).observe(|_: On<PointerClick>, mut round: Round| round.restart());
+                    row.spawn(button("Restart", fonts, colors::button())).observe(|_: On<PointerClick>, mut round: Round| round.restart());
                 },
             );
         });
+    });
+}
+
+/// What the exercise is: the shape drawn with the finger colors, or the scale and its notes.
+fn spawn_description(
+    body: &mut ChildSpawnerCommands,
+    exercise: &Exercise,
+    catalog: &Catalog,
+    instrument: &crate::music::Instrument,
+    fonts: &Fonts,
+) {
+    body.spawn(Node {
+        flex_direction: FlexDirection::Row,
+        flex_wrap: FlexWrap::Wrap,
+        column_gap: px(14),
+        row_gap: px(6),
+        align_items: AlignItems::Center,
+        ..default()
+    })
+    .with_children(|row| {
+        match exercise.kind {
+            Kind::Finger { shape, .. } => crate::diagram::spawn_shape_diagram(row, &SHAPES[shape], fonts),
+            Kind::Gaps { gap } => {
+                if let Some(shape) = gap_shape(gap, instrument.frets) {
+                    crate::diagram::spawn_shape_diagram(row, &shape, fonts)
+                }
+            }
+            Kind::Scale { group, skip } => {
+                let scale = &catalog.scale;
+                row.spawn(Node { flex_direction: FlexDirection::Column, row_gap: px(2), ..default() }).with_children(|c| {
+                    c.spawn(label(format!("{}: {}", scale.name(), scale.note_names().join(" ")), fonts.bold(17.0), colors::text()));
+                    c.spawn(label(
+                        format!(
+                            "{} notes per string, {}, {}: up and back down",
+                            scale.family.notes_per_string(),
+                            skip_name(skip).to_lowercase(),
+                            group_example(group)
+                        ),
+                        fonts.text(15.0),
+                        colors::dim(),
+                    ));
+                });
+            }
+            Kind::Shifts { growth } => {
+                let frets: Vec<String> = crate::drills::shift_positions(growth, instrument.frets).iter().map(|f| f.to_string()).collect();
+                row.spawn(label(
+                    format!("One finger per fret from fret {}, up the neck on a string and down on the next", frets.join(", then ")),
+                    fonts.text(16.0),
+                    colors::dim(),
+                ));
+            }
+        }
+        crate::diagram::spawn_finger_legend(row, fonts);
     });
 }
 
@@ -276,13 +315,13 @@ fn spawn_metronome_panel(body: &mut ChildSpawnerCommands, fonts: &Fonts) {
             flex_shrink: 0.0,
             ..default()
         },
-        BackgroundColor(colors::PANEL),
+        BackgroundColor(colors::panel()),
     ))
     .with_children(|panel| {
         panel
-            .spawn((button_frame(colors::BUTTON), ToggleButton))
+            .spawn((button_frame(colors::button()), ToggleButton))
             .with_children(|b| {
-                b.spawn((label("", fonts.text(17.0), colors::TEXT), PanelText::Toggle));
+                b.spawn((label("", fonts.text(17.0), colors::text()), PanelText::Toggle));
             })
             .observe(|_: On<PointerClick>, mut settings: ResMut<Settings>, mut round: Round| {
                 settings.metronome = !settings.metronome;
@@ -295,7 +334,7 @@ fn spawn_metronome_panel(body: &mut ChildSpawnerCommands, fonts: &Fonts) {
                        text: PanelText,
                        down: fn(&mut Round, &mut Progress, &mut Settings),
                        up: fn(&mut Round, &mut Progress, &mut Settings)| {
-            panel.spawn(label(name, fonts.text(16.0), colors::DIM));
+            panel.spawn(label(name, fonts.text(16.0), colors::dim()));
             panel.spawn(small_button("-", fonts)).observe(
                 move |_: On<PointerClick>, mut round: Round, mut progress: ResMut<Progress>, mut settings: ResMut<Settings>| {
                     down(&mut round, &mut progress, &mut settings)
@@ -303,7 +342,7 @@ fn spawn_metronome_panel(body: &mut ChildSpawnerCommands, fonts: &Fonts) {
             );
             panel.spawn((
                 Node { min_width: px(74), justify_content: JustifyContent::Center, ..default() },
-                children![(label("", fonts.bold(17.0), colors::ACCENT), text)],
+                children![(label("", fonts.bold(17.0), colors::accent()), text)],
             ));
             panel.spawn(small_button("+", fonts)).observe(
                 move |_: On<PointerClick>, mut round: Round, mut progress: ResMut<Progress>, mut settings: ResMut<Settings>| {
@@ -366,13 +405,13 @@ fn spawn_metronome_panel(body: &mut ChildSpawnerCommands, fonts: &Fonts) {
                             align_self: AlignSelf::Center,
                             ..default()
                         },
-                        BackgroundColor(colors::BUTTON),
+                        BackgroundColor(colors::button()),
                         BeatDot(beat),
                         Pickable::IGNORE,
                     ));
                 }
             });
-        panel.spawn((label("", fonts.text(15.0), colors::DIM), PanelText::Plan));
+        panel.spawn((label("", fonts.text(15.0), colors::dim()), PanelText::Plan));
     });
 }
 
@@ -398,13 +437,13 @@ fn metronome_panel(
         let color = match lit {
             Some(beat) if beat == dot.0 && fresh => {
                 if dot.0 == 0 {
-                    colors::ACCENT
+                    colors::accent()
                 } else {
-                    colors::OK
+                    colors::ok()
                 }
             }
-            Some(_) => colors::BUTTON_HOVER,
-            None => colors::LOCKED,
+            Some(_) => colors::button_hover(),
+            None => colors::locked(),
         };
         if bg.0 != color {
             bg.0 = color;
@@ -414,11 +453,11 @@ fn metronome_panel(
         return;
     }
     for (mut btn, mut bg) in &mut toggles {
-        btn.color = if settings.metronome { colors::SELECTED } else { colors::BUTTON };
+        btn.color = if settings.metronome { colors::selected() } else { colors::button() };
         btn.hover = btn.color.mix(&Color::WHITE, 0.12);
         bg.0 = btn.color;
     }
-    let record = progress.get(&drill.instrument.key()).and_then(|p| p.drills.get(&drill.level.id)).cloned().unwrap_or_default();
+    let record = progress.get(&drill.instrument.key()).and_then(|p| p.exercises.get(&drill.exercise.key)).cloned().unwrap_or_default();
     let plan = if !settings.metronome {
         "Turn the metronome on to practice at a tempo".to_string()
     } else if record.target_reached && drill.bpm >= drill.target {
@@ -453,7 +492,7 @@ fn play(
     mut metronome: ResMut<Metronome>,
     mut progress: ResMut<Progress>,
     mut commands: Commands,
-    fonts: Res<Fonts>,
+    (fonts, icons): (Res<Fonts>, Res<Icons>),
     roots: Query<Entity, With<DrillRoot>>,
 ) {
     let now = time.elapsed_secs();
@@ -507,7 +546,7 @@ fn play(
         drill.feedback.clear();
         if drill.index == drill.steps.len() {
             drill.ended = Some(now);
-            finish(&mut drill, now, &settings, &mut metronome, &mut progress, &mut commands, &fonts, &roots);
+            finish(&mut drill, now, &settings, &mut metronome, &mut progress, &mut commands, (&fonts, &icons), &roots);
         }
     }
 }
@@ -520,17 +559,18 @@ fn finish(
     metronome: &mut Metronome,
     progress: &mut Progress,
     commands: &mut Commands,
-    fonts: &Fonts,
+    (fonts, icons): (&Fonts, &Icons),
     roots: &Query<Entity, With<DrillRoot>>,
 ) {
     let accuracy = drill.accuracy();
     let speed = drill.notes_per_minute(now);
     let in_time = drill.in_time(settings.notes_per_beat).filter(|_| metronome.on);
     let key = settings.instrument().key();
-    let record = progress.of(&key).drills.entry(drill.level.id).or_default();
-    let first_time_done = !record.done && accuracy >= GOAL;
+    let record = progress.of(&key).exercises.entry(drill.exercise.key.clone()).or_default();
+    let stars_before = record.stars();
+    let earned = stars(accuracy);
     record.plays += 1;
-    record.done |= accuracy >= GOAL;
+    record.done |= earned > 0;
     record.best_accuracy = record.best_accuracy.max(accuracy);
     record.best_notes_per_minute = record.best_notes_per_minute.max(speed);
     record.last_accuracy = accuracy;
@@ -538,19 +578,24 @@ fn finish(
     record.last_played = now_unix_seconds();
     let played_bpm = drill.bpm;
     let change = in_time.map(|in_time| after_round(record, accuracy >= GOAL && in_time >= TIMING_GOAL));
+    if matches!(change, Some(TempoChange::Faster(_) | TempoChange::TargetReached(_))) {
+        record.best_clean_npm = record.best_clean_npm.max(played_bpm * settings.notes_per_beat as u32);
+    }
+    let stars_now = record.stars();
     (drill.bpm, drill.target) = tempo_of(record);
     progress.save();
     // The next round at the new tempo, the clicks too.
     metronome.bpm = drill.bpm;
     let instrument_progress = progress.of(&key).clone();
-    let all = levels();
-    let next = all.iter().skip(drill.level.id + 1).find(|l| is_unlocked(l, |id| instrument_progress.drill_done(id))).map(|l| l.id);
-    let verdict = if accuracy >= GOAL {
-        if first_time_done { "Level done! The next one is open." } else { "Goal reached." }
-    } else {
-        "Under 90%: once more, slower and cleaner."
+    let next = drill.catalog.next_unlocked(&drill.exercise.key, &instrument_progress).map(|e| e.key.clone());
+    let verdict = match earned {
+        0 => "Under 80%: once more, slower and cleaner.".to_string(),
+        _ if stars_before == 0 => format!("{earned} {}! The next level is open.", if earned == 1 { "star" } else { "stars" }),
+        _ if stars_now > stars_before => format!("{earned} stars, a new best!"),
+        3 => "Every note right!".to_string(),
+        _ => format!("{earned} {} this round.", if earned == 1 { "star" } else { "stars" }),
     };
-    let mut lines = vec![verdict.to_string()];
+    let mut lines = vec![verdict];
     lines.push(format!(
         "Accuracy {} ({} right, {} wrong) · {:.0} notes per minute",
         percent_text(accuracy),
@@ -597,18 +642,19 @@ fn finish(
                         max_width: percent(92),
                         ..default()
                     },
-                    BackgroundColor(colors::PANEL),
+                    BackgroundColor(colors::panel()),
                 ))
                 .with_children(|panel| {
-                    let color = if accuracy >= GOAL { colors::OK } else { colors::BAD };
+                    let color = if earned > 0 { colors::ok() } else { colors::bad() };
+                    crate::ui::spawn_stars(panel, earned, 40.0, icons);
                     panel.spawn(label(lines.join("\n"), fonts.bold(20.0), color));
                     if let Some(tempo_line) = tempo_line {
                         let color = if complete {
-                            colors::ACCENT
+                            colors::accent()
                         } else if clean {
-                            colors::OK
+                            colors::ok()
                         } else {
-                            colors::TEXT
+                            colors::text()
                         };
                         panel.spawn(label(tempo_line, fonts.bold(20.0), color));
                     }
@@ -621,11 +667,11 @@ fn finish(
                             ..default()
                         })
                         .with_children(|row| {
-                            row.spawn(button("Again", fonts, colors::BUTTON))
+                            row.spawn(button("Again", fonts, colors::button()))
                                 .observe(|_: On<PointerClick>, mut round: Round| round.restart());
                             if complete {
                                 let raised = drill.target + BPM_STEP;
-                                row.spawn(button(format!("Target {raised} BPM, again"), fonts, colors::SELECTED)).observe(
+                                row.spawn(button(format!("Target {raised} BPM, again"), fonts, colors::selected())).observe(
                                     move |_: On<PointerClick>,
                                           mut round: Round,
                                           mut progress: ResMut<Progress>,
@@ -636,17 +682,17 @@ fn finish(
                                 );
                             }
                             if let Some(next) = next {
-                                row.spawn(button("Next drill", fonts, colors::SELECTED)).observe(
+                                row.spawn(button("Next level", fonts, colors::selected())).observe(
                                     move |_: On<PointerClick>,
                                           mut selected: ResMut<SelectedLevel>,
                                           mut state: ResMut<NextState<Screen>>| {
-                                        selected.0 = next;
+                                        selected.0 = next.clone();
                                         // The same state: the drill screen is left and entered again.
                                         state.set(Screen::Drill);
                                     },
                                 );
                             }
-                            row.spawn(button("Levels", fonts, colors::BUTTON)).observe(
+                            row.spawn(button("Levels", fonts, colors::button())).observe(
                                 |_: On<PointerClick>, mut state: ResMut<NextState<Screen>>| {
                                     state.set(Screen::Drills);
                                 },
@@ -685,37 +731,15 @@ fn render(
     let now = time.elapsed_secs();
     let current = drill.current();
     *expected = Expected { midi: current.map(|s| drill.instrument.midi_at(s.position)), position: current.map(|s| s.position) };
-    // The four notes of the current shape on the fretboard.
     if let Ok(layer) = layers.single() {
-        let cell = (drill.index.min(drill.steps.len().saturating_sub(1)) / 4) * 4;
-        let marks: Vec<Mark> = drill.steps[cell..(cell + 4).min(drill.steps.len())]
-            .iter()
-            .enumerate()
-            .map(|(i, step)| {
-                let text = if settings.show_note_names {
-                    Spelled::from_midi(drill.instrument.midi_at(step.position), false).name()
-                } else {
-                    step.finger.to_string()
-                };
-                let i = cell + i;
-                let color = colors::FINGERS[step.finger as usize];
-                if i < drill.index {
-                    Mark::new(step.position, text, colors::OK)
-                } else if i == drill.index {
-                    let mark = Mark::new(step.position, text, color).big().ring(Color::WHITE);
-                    if drill.hinted { mark.pulse() } else { mark }
-                } else {
-                    Mark::new(step.position, text, color.with_alpha(0.45))
-                }
-            })
-            .collect();
+        let marks = fretboard_marks(&drill, settings.show_note_names);
         set_marks(&mut commands, layer, &marks, &fonts);
     }
     if let Ok(tab) = tabs.single() {
         draw_tab(&mut commands, tab, &drill, &fonts);
     }
     // The current note on the staff, as written for the instrument.
-    let sounding = current.map(|step| Spelled::from_midi(drill.instrument.midi_at(step.position), false));
+    let sounding = current.map(|step| step.note.unwrap_or_else(|| Spelled::from_midi(drill.instrument.midi_at(step.position), false)));
     if let Ok(staff) = staffs.single() {
         let color = current.map(|step| colors::FINGERS[step.finger as usize]);
         draw_staff(
@@ -779,6 +803,58 @@ fn render(
     }
 }
 
+/// The notes on the fretboard: the four of the current shape for the finger drills; for the
+/// scales the whole position, the next notes brighter; for the shifts the next notes. The note
+/// to play is big with a ring, the one played just before is green.
+fn fretboard_marks(drill: &Drill, note_names: bool) -> Vec<Mark> {
+    let steps = &drill.steps;
+    let index = drill.index.min(steps.len().saturating_sub(1));
+    let text = |step: &Step| {
+        if note_names {
+            step.note.unwrap_or_else(|| Spelled::from_midi(drill.instrument.midi_at(step.position), false)).name()
+        } else {
+            step.finger.to_string()
+        }
+    };
+    let mut marks: Vec<Mark> = Vec::new();
+    let put = |marks: &mut Vec<Mark>, mark: Mark| {
+        marks.retain(|m| m.position != mark.position);
+        marks.push(mark);
+    };
+    match drill.exercise.kind {
+        Kind::Finger { .. } | Kind::Gaps { .. } => {
+            let cell = (index / 4) * 4;
+            for (i, step) in steps.iter().enumerate().skip(cell).take(4) {
+                let color = colors::FINGERS[step.finger as usize];
+                let mark = if i < drill.index {
+                    Mark::new(step.position, text(step), colors::ok())
+                } else {
+                    Mark::new(step.position, text(step), color.with_alpha(0.45))
+                };
+                put(&mut marks, mark);
+            }
+        }
+        Kind::Scale { .. } | Kind::Shifts { .. } => {
+            if matches!(drill.exercise.kind, Kind::Scale { .. }) {
+                for step in steps {
+                    put(&mut marks, Mark::new(step.position, text(step), colors::FINGERS[step.finger as usize].with_alpha(0.25)));
+                }
+            }
+            for step in steps.iter().skip(drill.index + 1).take(6).collect::<Vec<_>>().into_iter().rev() {
+                put(&mut marks, Mark::new(step.position, text(step), colors::FINGERS[step.finger as usize].with_alpha(0.6)));
+            }
+            if let Some(previous) = drill.index.checked_sub(1).and_then(|i| steps.get(i)) {
+                put(&mut marks, Mark::new(previous.position, text(previous), colors::ok()));
+            }
+        }
+    }
+    if let Some(step) = drill.current() {
+        let mark = Mark::new(step.position, text(&step), colors::FINGERS[step.finger as usize]).big().ring(Color::WHITE);
+        put(&mut marks, if drill.hinted { mark.pulse() } else { mark });
+    }
+    marks
+}
+
 fn capitalize(s: &str) -> String {
     let mut c = s.chars();
     c.next().map(|f| f.to_uppercase().chain(c).collect()).unwrap_or_default()
@@ -796,12 +872,12 @@ fn draw_tab(commands: &mut Commands, tab: Entity, drill: &Drill, fonts: &Fonts) 
                 .with_children(|row| {
                     row.spawn((
                         Node { width: px(22), ..default() },
-                        children![label(drill.instrument.string_label(string), fonts.text(14.0), colors::DIM)],
+                        children![label(drill.instrument.string_label(string), fonts.text(14.0), colors::dim())],
                     ));
                     for i in start..start + TAB_COLUMNS {
                         let step = drill.steps.get(i).filter(|_| i < end);
                         let on_string = step.filter(|s| s.position.string == string);
-                        let bg = if i == drill.index { colors::SELECTED.with_alpha(0.35) } else { Color::NONE };
+                        let bg = if i == drill.index { colors::selected().with_alpha(0.35) } else { Color::NONE };
                         row.spawn((
                             Node {
                                 width: px(32),
@@ -822,13 +898,13 @@ fn draw_tab(commands: &mut Commands, tab: Entity, drill: &Drill, fonts: &Fonts) 
                                     top: percent(50),
                                     ..default()
                                 },
-                                BackgroundColor(colors::DIM.with_alpha(0.6)),
+                                BackgroundColor(colors::dim().with_alpha(0.6)),
                             ));
                             if let Some(step) = on_string {
-                                let color = if i < drill.index { colors::OK } else { colors::FINGERS[step.finger as usize] };
+                                let color = if i < drill.index { colors::ok() } else { colors::FINGERS[step.finger as usize] };
                                 cell.spawn((
                                     Node { padding: UiRect::horizontal(px(3)), ..default() },
-                                    BackgroundColor(colors::BG),
+                                    BackgroundColor(colors::bg()),
                                     children![label(step.position.fret.to_string(), fonts.bold(15.0), color)],
                                 ));
                             }

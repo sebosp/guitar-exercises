@@ -131,7 +131,7 @@ pub fn spawn_fretboard(parent: &mut ChildSpawnerCommands, instrument: &Instrumen
             column.spawn(Node { width: percent(100), height: px(22), ..default() }).with_children(|numbers| {
                 for fret in 0..=frets {
                     let marked = matches!(fret % 12, 3 | 5 | 7 | 9 | 0) && fret > 0;
-                    let color = if marked { colors::TEXT } else { colors::DIM };
+                    let color = if marked { colors::text() } else { colors::dim() };
                     let x = fret_center_x(fret, frets, left_handed);
                     numbers.spawn((
                         Node {
@@ -206,7 +206,7 @@ fn spawn_board(board: &mut ChildSpawnerCommands, instrument: &Instrument, left_h
                 ..absolute(name_x, y)
             },
             Pickable::IGNORE,
-            children![label(instrument.string_label(string), fonts.text(13.0), colors::DIM)],
+            children![label(instrument.string_label(string), fonts.text(13.0), colors::dim())],
         ));
     }
     // The tap targets, one per string and fret.
@@ -263,7 +263,7 @@ pub fn set_marks(commands: &mut Commands, layer: (Entity, &MarksLayer), marks: &
             UiTransform::default(),
             Pickable::IGNORE,
             ChildOf(entity),
-            children![label(mark.text.clone(), fonts.bold(if mark.big { 17.0 } else { 14.0 }), Color::WHITE)],
+            children![label(mark.text.clone(), fonts.bold(if mark.big { 17.0 } else { 14.0 }), crate::theme::text_on(mark.fill))],
         ));
         if mark.pulse {
             spawned.insert(Pulse);
