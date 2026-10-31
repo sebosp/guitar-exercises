@@ -11,6 +11,10 @@ yet or not verified, the rest are suggestions.
       dialog and that cpal's AAudio input starts after it is granted.
 - [ ] Web: check the microphone in Firefox, Chrome and Safari (the audio context starts suspended
       until a click) and on a phone browser.
+- [ ] Since the scales page, the zoom and the full screen (2026-10-31): the macOS build (Cmd zoom,
+      Cmd+Ctrl+F; only built by the GitHub workflow, no macOS SDK on the desktops), the web page in a
+      real browser (built with trunk, headless Firefox does not draw the canvas), the two-finger
+      pinch on an Android phone.
 - [ ] macOS: an `.app` bundle with `NSMicrophoneUsageDescription` in its `Info.plist`, the bare
       binary only works from the Terminal.
 - [ ] Windows: an icon and a manifest for the executable.
