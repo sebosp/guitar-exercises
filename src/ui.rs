@@ -53,8 +53,9 @@ pub mod colors {
     pub const NUT: Color = Color::srgb(0.90, 0.87, 0.78);
     pub const STRING: Color = Color::srgb(0.85, 0.81, 0.72);
     pub const INLAY: Color = Color::srgb(0.88, 0.85, 0.78);
-    pub const PAPER: Color = Color::srgb(0.95, 0.93, 0.88);
-    pub const INK: Color = Color::srgb(0.10, 0.10, 0.12);
+    /// The staff: a panel with light lines, as the rest of the dark theme.
+    pub const PAPER: Color = Color::srgb(0.16, 0.17, 0.21);
+    pub const INK: Color = Color::srgb(0.84, 0.83, 0.80);
     pub const LOCKED: Color = Color::srgb(0.17, 0.18, 0.20);
 
     /// Index, middle, ring and pinky: the categorical palette of claudralingo (yellow, aqua,

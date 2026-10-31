@@ -717,7 +717,7 @@ fn render(
     // The current note on the staff, as written for the instrument.
     let sounding = current.map(|step| Spelled::from_midi(drill.instrument.midi_at(step.position), false));
     if let Ok(staff) = staffs.single() {
-        let color = current.map(|step| colors::FINGERS[step.finger as usize].mix(&colors::INK, 0.35));
+        let color = current.map(|step| colors::FINGERS[step.finger as usize]);
         draw_staff(
             &mut commands,
             staff,
