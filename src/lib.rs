@@ -13,6 +13,7 @@ pub mod learn;
 pub mod metronome;
 pub mod music;
 pub mod pitch;
+pub mod practice;
 pub mod progress;
 pub mod scales;
 pub mod screens;
@@ -35,6 +36,7 @@ impl Plugin for GuitarExercisesPlugin {
             metronome::MetronomePlugin,
             tuner::TunerPlugin,
             zoom::ZoomPlugin,
+            practice::PracticePlugin,
             fretboard::FretboardPlugin,
             screens::ScreensPlugin,
         ));

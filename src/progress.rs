@@ -129,6 +129,11 @@ impl InstrumentProgress {
 #[serde(default)]
 pub struct Progress {
     pub instruments: BTreeMap<String, InstrumentProgress>,
+    /// The practice of each day since the UNIX epoch, every instrument together, see
+    /// [`crate::practice`].
+    pub days: BTreeMap<u64, crate::practice::Day>,
+    /// The rounds of the drills, the oldest first.
+    pub sessions: Vec<crate::practice::Session>,
 }
 
 impl Progress {

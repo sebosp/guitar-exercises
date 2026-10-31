@@ -234,6 +234,14 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
             toggle(list, "Sharps and flats in the note games", fonts, |s| s.accidentals, |s| s.accidentals = !s.accidentals);
             stepper(
                 list,
+                "Daily goal",
+                fonts,
+                |s| format!("{} min", s.daily_goal_minutes),
+                |s| s.daily_goal_minutes = s.daily_goal_minutes.saturating_sub(5).max(5),
+                |s| s.daily_goal_minutes += 5,
+            );
+            stepper(
+                list,
                 "Right answers to clear a note",
                 fonts,
                 |s| s.clear_streak.to_string(),

@@ -637,6 +637,20 @@ fn finish(
     }
     let stars_now = record.stars();
     (drill.bpm, drill.target) = tempo_of(record);
+    let kind = drill.catalog.section_of(&drill.exercise.key).map_or("", |s| s.name()).to_string();
+    let seconds = drill.started.map_or(0.0, |start| now - start);
+    progress.log_round(
+        crate::practice::Session {
+            finished_at: now_unix_seconds(),
+            key: drill.exercise.key.clone(),
+            kind,
+            accuracy,
+            notes_per_minute: speed,
+            in_time,
+            seconds,
+        },
+        earned > 0,
+    );
     progress.save();
     // The next round at the new tempo, the clicks too.
     metronome.bpm = drill.bpm;

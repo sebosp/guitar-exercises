@@ -4,6 +4,7 @@ use bevy::prelude::*;
 pub mod drill;
 pub mod drills;
 pub mod find;
+pub mod help;
 pub mod learn;
 pub mod menu;
 pub mod settings;
@@ -28,6 +29,7 @@ impl Plugin for ScreensPlugin {
             learn::LearnPlugin,
             find::FindPlugin,
             stats::StatsPlugin,
+            help::HelpPlugin,
         ));
     }
 }

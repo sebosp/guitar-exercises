@@ -24,6 +24,7 @@ pub enum Screen {
     Find,
     Settings,
     Stats,
+    Help,
 }
 
 impl Screen {

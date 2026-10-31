@@ -40,6 +40,10 @@ pub struct Settings {
     pub scale: crate::scales::Scale,
     /// The zoom over the scale that fits the window, see [`crate::zoom`].
     pub zoom: f32,
+    /// The minutes of practice of a day for the streak.
+    pub daily_goal_minutes: u32,
+    /// The help was shown, on the first start.
+    pub help_seen: bool,
 }
 
 impl Default for Settings {
@@ -82,6 +86,8 @@ impl Settings {
             theme: crate::theme::Theme::Dark,
             scale: crate::scales::Scale::default(),
             zoom: 1.0,
+            daily_goal_minutes: 10,
+            help_seen: false,
         }
     }
 
@@ -125,6 +131,7 @@ impl Settings {
         if !self.zoom.is_finite() {
             self.zoom = 1.0;
         }
+        self.daily_goal_minutes = self.daily_goal_minutes.clamp(1, 120);
         self.zoom = self.zoom.clamp(crate::zoom::MIN_ZOOM / 3.0, crate::zoom::MAX_ZOOM / 0.75);
     }
 
