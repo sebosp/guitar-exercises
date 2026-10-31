@@ -165,6 +165,7 @@ fn tap(mut t: ResMut<Tutorial>, mut taps: MessageReader<FretTapped>, mut play: M
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render(
     mut t: ResMut<Tutorial>,
     mut commands: Commands,
