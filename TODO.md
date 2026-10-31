@@ -14,11 +14,16 @@ yet or not verified, the rest are suggestions.
 - [ ] macOS: an `.app` bundle with `NSMicrophoneUsageDescription` in its `Info.plist`, the bare
       binary only works from the Terminal.
 - [ ] Windows: an icon and a manifest for the executable.
+- [ ] The metronome through a speaker with the microphone on: that the clicks (noise bursts) are
+      never heard as notes and do not break the onsets of a ringing note; the clicks in the
+      browser (Web Audio, scheduled ahead) and on Android (cpal AAudio output).
+- [ ] The timing check of the drills with real playing: the tolerance (20% of a slot, 60 to 120 ms)
+      and the 80% goal, with the microphone delay and with taps.
 
 ## Drills
 
-- [ ] A metronome (needs the `bevy_audio` feature): a target tempo per level, the speed goal raised
-      little by little, the notes checked against the beat (early, late).
+- [ ] The metronome: show each note early or late against the beat, a count-in bar, accents per
+      group of notes per beat.
 - [ ] Positions up the neck: the same level at frets 5, 7, 9, 12, the spider walk all the way up and
       back.
 - [ ] More shapes: three fingers per string (scales), the pinky anchor, legato (hammer-ons and
@@ -44,8 +49,8 @@ yet or not verified, the rest are suggestions.
 - [ ] A light theme and larger text options; the colors of the fingers are already color blind safe.
 - [ ] A keyboard and gamepad way to tap the fretboard.
 - [ ] Animations: the notes sliding in the tablature, confetti when a level is done.
-- [ ] A tuner screen with a needle (the settings have a text one).
-- [ ] Custom tunings (any note per string), the capo.
+- [ ] A tuner screen of its own (the settings and the drills have one).
+- [ ] The capo.
 - [ ] A history graph of the accuracy and the speed per day in the statistics.
 - [ ] Export and import of the progress (a JSON file), and sync between devices.
 

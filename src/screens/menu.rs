@@ -28,7 +28,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>) {
         "{} · {} strings · {} ({}) · {} frets",
         settings.instrument.name(),
         settings.strings,
-        settings.tuning.name(),
+        crate::music::TuningPreset::describe(&settings.tuning),
         strings.join(" "),
         settings.frets
     );

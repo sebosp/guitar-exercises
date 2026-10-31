@@ -20,6 +20,17 @@ pub struct DrillRecord {
     pub last_accuracy: f32,
     pub last_notes_per_minute: f32,
     pub last_played: u64,
+    /// The tempo of the metronome for the next round, 0 before the first round in time; see
+    /// [`crate::tempo`].
+    pub bpm: u32,
+    /// The tempo to reach, set by the player; 0 is the default.
+    pub target_bpm: u32,
+    /// The rounds under the goal in a row at `bpm`.
+    pub misses: u8,
+    /// A clean round at the target tempo.
+    pub target_reached: bool,
+    /// The fastest clean round.
+    pub best_bpm: u32,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]

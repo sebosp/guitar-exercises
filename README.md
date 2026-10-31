@@ -29,7 +29,18 @@ The levels are grouped by hand shape, from the easiest:
 Each group has the 24 orders of the fingers, 1-2-3-4 and 4-3-2-1 first, then the orders with the
 smallest jumps between fingers. 90% accuracy completes a level and opens the next order; three
 orders done open the next group. The accuracy and the speed (notes per minute) are recorded. A pause
-longer than the hint delay names the finger, the fret and the string, and the note pulses.
+longer than the hint delay names the finger, the fret and the string, and the note pulses. Next to
+the tablature the current note is on the staff with its name, and a tuner shows what the
+microphone hears.
+
+With the metronome on (the default), each drill has its own tempo and a target tempo, 60 and 100
+BPM at first, both changed with - and + in the drill, with 1 to 4 notes per beat. A round is clean
+when 90% of the notes are right and 80% are in time: one slot after the previous note, near the
+player's usual place in the slot (a steady delay of the microphone is fine, drifting from the
+clicks is not). After a clean round the tempo goes up 5 BPM, up to the target; a clean round at the
+target completes the lesson, and the target can be raised. After a round under the goal the tempo
+stays, after a second one in a row it goes down 5 BPM. The clicks are short bursts of noise, without
+a pitch for the microphone to hear as a note.
 
 ### Learn notes (staff to fretboard)
 
@@ -58,9 +69,10 @@ shows the letters of the staff, then the places left one by one.
 
 ### Settings and statistics
 
-The instrument (guitar 6 to 8 strings, bass 4 to 6), the tuning (standard, drop, half step down),
-the frets (12 by default, up to 24), left-handed, the microphone with its noise gate and a tuner to
-check it, the hint delay, the drill length, the note names in the drills, the sharps and flats, the
+The instrument (guitar 6 to 8 strings, bass 4 to 6), the tuning (standard, drop, half step down,
+or each string a semitone up or down, a 5-string bass with its low string in A for one), the frets
+(12 by default, up to 24), left-handed, the microphone with its noise gate and a tuner to the open
+strings, the hint delay, the drill length, the note names in the drills, the sharps and flats, the
 right answers that clear a note. The statistics show every drill played and every note with its
 accuracy, its time to answer and the hints.
 
@@ -73,7 +85,7 @@ kept per instrument and number of strings (`guitar-6`, `bass-4`...).
 
 The samples of the default input are decimated to about 12 kHz and their pitch is found with YIN;
 a pitch held for about 50 ms is a note, a new pluck of the same note counts again. Every note from
-B0 (the low string of a 5-string bass) up is heard. A clip-on pickup or a plugged-in audio
+A0 (the low string of a 5-string bass tuned a whole tone down) up is heard. A clip-on pickup or a plugged-in audio
 interface works best; with a microphone, turn up the noise gate in a noisy room.
 
 - Desktop: the default input device of the system (cpal: ALSA, CoreAudio, WASAPI). On macOS the

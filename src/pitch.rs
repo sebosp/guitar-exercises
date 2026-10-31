@@ -4,8 +4,9 @@
 //! The buffers are decimated to about 12 kHz first: the fundamentals of a guitar and a bass are
 //! under 1.4 kHz, and YIN is quadratic in the window size.
 
-/// The lowest note listened for, a bit under B0 (30.9 Hz) of a 5-string bass.
-pub const MIN_HZ: f32 = 28.0;
+/// The lowest note listened for, a bit under A0 (27.5 Hz): the low B of a 5-string bass tuned a
+/// whole tone down.
+pub const MIN_HZ: f32 = 25.0;
 pub const MAX_HZ: f32 = 1400.0;
 const TARGET_RATE: f32 = 12_000.0;
 
@@ -164,8 +165,8 @@ mod tests {
     #[test]
     fn detects_guitar_and_bass_notes() {
         let rate = 48_000.0;
-        // B0 of a 5-string bass, E1, E2, A2, the open high e, fret 12 of the high e.
-        for midi in [23, 28, 40, 45, 64, 76] {
+        // A0 and B0 of a 5-string bass, E1, E2, A2, the open high e, fret 12 of the high e.
+        for midi in [21, 23, 28, 40, 45, 64, 76] {
             let hz = midi_to_hz(midi as f32);
             let raw = pluck(hz, rate, 8192);
             let (samples, sr) = decimate(&raw, rate);

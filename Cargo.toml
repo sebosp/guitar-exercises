@@ -48,6 +48,10 @@ web-sys = { version = "0.3", features = [
     "AudioNode",
     "AnalyserNode",
     "MediaStreamAudioSourceNode",
+    "AudioBuffer",
+    "AudioBufferSourceNode",
+    "AudioScheduledSourceNode",
+    "AudioDestinationNode",
     "DomException",
 ] }
 

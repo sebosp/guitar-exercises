@@ -8,6 +8,7 @@ pub mod audio;
 pub mod drills;
 pub mod fretboard;
 pub mod learn;
+pub mod metronome;
 pub mod music;
 pub mod pitch;
 pub mod progress;
@@ -15,6 +16,8 @@ pub mod screens;
 pub mod settings;
 pub mod staff;
 pub mod storage;
+pub mod tempo;
+pub mod tuner;
 pub mod ui;
 
 pub struct GuitarExercisesPlugin;
@@ -24,6 +27,8 @@ impl Plugin for GuitarExercisesPlugin {
         app.insert_resource(settings::Settings::load()).insert_resource(progress::Progress::load()).add_plugins((
             ui::UiPlugin,
             audio::AudioInputPlugin,
+            metronome::MetronomePlugin,
+            tuner::TunerPlugin,
             fretboard::FretboardPlugin,
             screens::ScreensPlugin,
         ));

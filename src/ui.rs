@@ -209,9 +209,11 @@ pub fn small_button(text: impl Into<String>, fonts: &Fonts) -> impl Bundle {
     )
 }
 
-/// The root of a screen: the whole window, a column, despawned when the screen is left.
+/// The root of a screen: the whole window, a column, despawned when the screen is left. In
+/// viewport units: the percentages of a root node grow with the content, and the scroll areas
+/// under it would never scroll.
 pub fn screen_root(screen: Screen) -> impl Bundle {
-    (Node { width: percent(100), height: percent(100), flex_direction: FlexDirection::Column, ..default() }, DespawnOnExit(screen))
+    (Node { width: vw(100), height: vh(100), flex_direction: FlexDirection::Column, ..default() }, DespawnOnExit(screen))
 }
 
 /// The bar on top of every screen: back, the title, the microphone.

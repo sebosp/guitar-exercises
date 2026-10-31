@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use crate::drills::{FINGER_NAMES, Level, SHAPES, ShapeKind, is_unlocked, levels};
 use crate::progress::Progress;
 use crate::settings::Settings;
+use crate::tempo::tempo_of;
 use crate::ui::{Fonts, Screen, button_frame, colors, label, percent_text, screen_root, scroll_area, spawn_top_bar};
 
 /// The level to play.
@@ -41,7 +42,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>, pro
         spawn_top_bar(root, "Finger drills", Screen::Drills, fonts);
         root.spawn(scroll_area()).observe(crate::ui::scroll_on_wheel).observe(crate::ui::scroll_on_drag).with_children(|list| {
             list.spawn(label(
-                "Up the strings, one fret higher, back down. 90% accuracy opens the next order; three orders done open the next shape.",
+                "Up the strings, one fret higher, back down. 90% accuracy opens the next order; three orders done open the next shape. With the metronome each order climbs to its target tempo.",
                 fonts.text(16.0),
                 colors::DIM,
             ));
@@ -88,6 +89,16 @@ fn spawn_tile(grid: &mut ChildSpawnerCommands, level: &Level, record: &crate::pr
         .with_children(|tile| {
             tile.spawn(label(level.order_name(), fonts.bold(18.0), if unlocked { colors::TEXT } else { colors::DIM }));
             tile.spawn(label(detail, fonts.text(13.0), detail_color));
+            // The tempo with the metronome: where it is, or the target reached.
+            if let Some(d) = drill.filter(|d| d.bpm > 0) {
+                let (bpm, target) = tempo_of(d);
+                let (text, color) = if d.target_reached {
+                    (format!("{target} BPM done"), colors::ACCENT)
+                } else {
+                    (format!("{bpm}/{target} BPM"), colors::DIM)
+                };
+                tile.spawn(label(text, fonts.text(12.0), color));
+            }
         })
         .observe(move |_: On<PointerClick>, mut selected: ResMut<SelectedLevel>, mut next: ResMut<NextState<Screen>>| {
             if unlocked {

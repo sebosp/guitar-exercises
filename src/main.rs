@@ -30,16 +30,23 @@ fn main() {
 /// - `GE_PLAY`: the notes played right (heard by the "microphone"), `GE_TAP` tapped right,
 ///   `GE_MISS` wrong notes heard;
 /// - `GE_WAIT`: seconds to wait after them, for the hints;
-/// - `GE_SIZE`: the window size, `1280x860` by default.
+/// - `GE_SCROLL`: mouse wheel lines down over the middle of the window, through the picking;
+/// - `GE_SIZE`: the window size, `1280x860` by default;
+/// - `GE_SOUND=1`: the clicks of the metronome out loud.
 ///
-/// The microphone is off. Use `XDG_CONFIG_HOME` to keep the saves away from the real ones.
+/// The microphone is off, and the clicks of the metronome unless `GE_SOUND=1`. Use `XDG_CONFIG_HOME` to keep the saves away from the real ones.
 #[cfg(not(target_arch = "wasm32"))]
 mod snapshot {
+    use bevy::camera::NormalizedRenderTarget;
+    use bevy::input::mouse::MouseScrollUnit;
+    use bevy::input::touch::TouchPhase;
+    use bevy::picking::pointer::{Location, PointerAction, PointerId, PointerInput};
     use bevy::prelude::*;
     use bevy::render::view::screenshot::{Screenshot, save_to_disk};
-    use bevy::window::{PrimaryWindow, WindowResolution};
+    use bevy::window::{PrimaryWindow, WindowRef, WindowResolution};
     use guitar_exercises::audio::NoteHeard;
     use guitar_exercises::fretboard::FretTapped;
+    use guitar_exercises::metronome::Metronome;
     use guitar_exercises::screens::Expected;
     use guitar_exercises::screens::drills::SelectedLevel;
     use guitar_exercises::settings::Settings;
@@ -53,6 +60,7 @@ mod snapshot {
         tap: u32,
         miss: u32,
         wait: f32,
+        scroll: f32,
     }
 
     fn var<T: std::str::FromStr>(name: &str, default: T) -> T {
@@ -79,13 +87,14 @@ mod snapshot {
             tap: var("GE_TAP", 0),
             miss: var("GE_MISS", 0),
             wait: var("GE_WAIT", 0.0),
+            scroll: var("GE_SCROLL", 0.0),
         })
         .insert_resource(SelectedLevel(var("GE_LEVEL", 0)))
         .add_systems(Startup, setup)
         .add_systems(Update, run);
     }
 
-    fn setup(mut window: Single<&mut Window, With<PrimaryWindow>>, mut settings: ResMut<Settings>) {
+    fn setup(mut window: Single<&mut Window, With<PrimaryWindow>>, mut settings: ResMut<Settings>, mut metronome: ResMut<Metronome>) {
         // A window in the background is throttled by the compositor with vsync.
         window.present_mode = bevy::window::PresentMode::AutoNoVsync;
         let size = std::env::var("GE_SIZE").unwrap_or_default();
@@ -93,6 +102,7 @@ mod snapshot {
             window.resolution = WindowResolution::new(w, h);
         }
         settings.microphone = false;
+        metronome.sound = var("GE_SOUND", 0) == 1;
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -107,6 +117,8 @@ mod snapshot {
         mut next: ResMut<NextState<Screen>>,
         mut heard: MessageWriter<NoteHeard>,
         mut tapped: MessageWriter<FretTapped>,
+        mut pointer: MessageWriter<PointerInput>,
+        window: Single<(Entity, &Window), With<PrimaryWindow>>,
         mut commands: Commands,
         mut exit: MessageWriter<AppExit>,
     ) {
@@ -115,6 +127,20 @@ mod snapshot {
             next.set(snapshot.screen);
         }
         let start = 30;
+        // The pointer over the middle, then the wheel one line at a time.
+        let (window_entity, window) = *window;
+        if snapshot.scroll > 0.0 && *frame >= start - 10 && *frame < start {
+            let target = WindowRef::Primary.normalize(Some(window_entity)).map(NormalizedRenderTarget::Window);
+            if let Some(target) = target {
+                let location = Location { target, position: Vec2::new(window.width() / 2.0, window.height() / 2.0) };
+                let action = if *frame == start - 10 {
+                    PointerAction::Move { delta: Vec2::ZERO }
+                } else {
+                    PointerAction::Scroll { unit: MouseScrollUnit::Line, x: 0.0, y: -snapshot.scroll / 9.0, phase: TouchPhase::Moved }
+                };
+                pointer.write(PointerInput::new(PointerId::Mouse, location, action));
+            }
+        }
         let total = snapshot.play + snapshot.tap + snapshot.miss;
         // One answer every 8 frames; the note games ignore the answers while they show the
         // previous one.
