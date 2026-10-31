@@ -5,8 +5,10 @@ use bevy::prelude::*;
 use crate::drills::{Shape, ShapeKind};
 use crate::ui::{Fonts, colors, label};
 
-const CELL: f32 = 30.0;
-const DOT: f32 = 22.0;
+const CELL: f32 = 24.0;
+const DOT: f32 = 19.0;
+/// The names of the rows of an anchor shape.
+const NAMES: f32 = 54.0;
 
 /// The diagram of a shape: one row for one string; for an anchor the index on the lower row and
 /// the other fingers `skip` strings higher.
@@ -16,17 +18,18 @@ pub fn spawn_shape_diagram(parent: &mut ChildSpawnerCommands, shape: &Shape, fon
     let fret_of = |finger: usize| first + shape.offsets[finger - 1];
     // The rows from the top: (the name of the string, the fingers on it).
     let rows: Vec<(String, Vec<usize>)> = match shape.kind {
-        ShapeKind::OneString => vec![("string".into(), vec![1, 2, 3, 4])],
+        ShapeKind::OneString => vec![(String::new(), vec![1, 2, 3, 4])],
         ShapeKind::Anchor { skip } => {
-            let higher = if skip == 1 { "next string".to_string() } else { format!("{skip} strings up") };
-            vec![(higher, vec![2, 3, 4]), ("index string".into(), vec![1])]
+            let higher = if skip == 1 { "next".to_string() } else { format!("+{skip} strings") };
+            vec![(higher, vec![2, 3, 4]), ("index".into(), vec![1])]
         }
     };
+    let names = if matches!(shape.kind, ShapeKind::Anchor { .. }) { NAMES } else { 0.0 };
     parent
         .spawn((
             Node {
                 flex_direction: FlexDirection::Column,
-                padding: UiRect::axes(px(8), px(6)),
+                padding: UiRect::axes(px(6), px(4)),
                 border_radius: BorderRadius::all(px(6)),
                 align_self: AlignSelf::Start,
                 flex_shrink: 0.0,
@@ -38,18 +41,18 @@ pub fn spawn_shape_diagram(parent: &mut ChildSpawnerCommands, shape: &Shape, fon
         .with_children(|d| {
             // The fret numbers.
             d.spawn(Node { flex_direction: FlexDirection::Row, ..default() }).with_children(|r| {
-                r.spawn(Node { width: px(96), ..default() });
+                r.spawn(Node { width: px(names), ..default() });
                 for fret in first..=last {
                     r.spawn((
                         Node { width: px(CELL), justify_content: JustifyContent::Center, ..default() },
-                        children![label(fret.to_string(), fonts.text(13.0), colors::dim())],
+                        children![label(fret.to_string(), fonts.text(12.0), colors::dim())],
                     ));
                 }
             });
             for (name, fingers) in rows {
                 d.spawn(Node { flex_direction: FlexDirection::Row, align_items: AlignItems::Center, height: px(CELL), ..default() })
                     .with_children(|r| {
-                        r.spawn((Node { width: px(96), ..default() }, children![label(name, fonts.text(13.0), colors::dim())]));
+                        r.spawn((Node { width: px(names), ..default() }, children![label(name, fonts.text(12.0), colors::dim())]));
                         for fret in first..=last {
                             let finger = fingers.iter().copied().find(|f| fret_of(*f) == fret);
                             r.spawn((

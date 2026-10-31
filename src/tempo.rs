@@ -63,15 +63,23 @@ impl Tier {
         }
     }
 
-    /// Gray, green, purple and orange, the same in every theme.
+    /// Gray, green, purple and orange, as the rarities of the games; darker steps on the light
+    /// themes for a 3:1 contrast. The tier is always written on the tile too, the gray of Basic
+    /// is no hue.
     pub fn color(self) -> bevy::prelude::Color {
         use bevy::prelude::Color;
-        match self {
-            Tier::Basic => Color::srgb(0.62, 0.64, 0.68),
-            Tier::Medium => Color::srgb(0.30, 0.78, 0.40),
-            Tier::Advanced => Color::srgb(0.66, 0.42, 0.95),
-            Tier::Legendary => Color::srgb(1.0, 0.62, 0.12),
-        }
+        let light = crate::theme::is_light();
+        let hex = match (self, light) {
+            (Tier::Basic, false) => 0x9ea3ad,
+            (Tier::Medium, false) => 0x4cc766,
+            (Tier::Advanced, false) => 0xa86bf2,
+            (Tier::Legendary, false) => 0xff9e1f,
+            (Tier::Basic, true) => 0x6b7280,
+            (Tier::Medium, true) => 0x2e8b3e,
+            (Tier::Advanced, true) => 0x7c4dd6,
+            (Tier::Legendary, true) => 0xc25f00,
+        };
+        Color::srgb_u8((hex >> 16) as u8, (hex >> 8) as u8, hex as u8)
     }
 }
 

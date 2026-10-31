@@ -19,6 +19,12 @@ use crate::ui::{
 #[derive(Resource, Default, Clone)]
 pub struct SelectedLevel(pub String);
 
+/// The columns of a row: the name, the shape, the tiles (wrapping under when narrower).
+const NAME_COLUMN: f32 = 150.0;
+const SHAPE_COLUMN: f32 = 190.0;
+const TILES_MIN: f32 = 330.0;
+const TILE: f32 = 104.0;
+
 /// A line shown on top of the page once, after a random unlock.
 #[derive(Resource, Default)]
 struct Notice(String);
@@ -293,23 +299,47 @@ fn spawn_row(
     fonts: &Fonts,
     icons: &Icons,
 ) {
-    list.spawn(label(&row.title, fonts.bold(19.0), colors::accent()));
-    // The shape of a finger drill or a gap, drawn.
-    match row.exercises.first().map(|e| e.kind) {
-        Some(Kind::Finger { shape, .. }) => spawn_shape_diagram(list, &SHAPES[shape], fonts),
-        Some(Kind::Gaps { gap }) => {
-            if let Some(shape) = gap_shape(gap, frets) {
-                spawn_shape_diagram(list, &shape, fonts)
-            }
+    // Three columns: the name, the shape, the levels; on a narrow screen the levels wrap under.
+    list.spawn(Node {
+        flex_direction: FlexDirection::Row,
+        flex_wrap: FlexWrap::Wrap,
+        align_items: AlignItems::Center,
+        column_gap: px(12),
+        row_gap: px(6),
+        padding: UiRect::vertical(px(4)),
+        border: UiRect::top(px(1)),
+        ..default()
+    })
+    .insert(BorderColor::all(colors::button()))
+    .with_children(|r| {
+        r.spawn(Node { width: px(NAME_COLUMN), flex_shrink: 0.0, ..default() }).with_children(|c| {
+            c.spawn(label(&row.title, fonts.bold(16.0), colors::accent()));
+        });
+        // The shape of a finger drill or a gap, drawn.
+        let shape = match row.exercises.first().map(|e| e.kind) {
+            Some(Kind::Finger { shape, .. }) => Some(SHAPES[shape]),
+            Some(Kind::Gaps { gap }) => gap_shape(gap, frets),
+            _ => None,
+        };
+        if let Some(shape) = shape {
+            r.spawn(Node { min_width: px(SHAPE_COLUMN), flex_shrink: 0.0, ..default() })
+                .with_children(|c| spawn_shape_diagram(c, &shape, fonts));
         }
-        _ => {}
-    }
-    list.spawn(Node { flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap, column_gap: px(8), row_gap: px(8), ..default() })
+        r.spawn(Node {
+            flex_direction: FlexDirection::Row,
+            flex_wrap: FlexWrap::Wrap,
+            flex_grow: 1.0,
+            flex_basis: px(TILES_MIN),
+            column_gap: px(6),
+            row_gap: px(6),
+            ..default()
+        })
         .with_children(|grid| {
             for exercise in &row.exercises {
                 spawn_tile(grid, exercise, catalog, record, fonts, icons);
             }
         });
+    });
 }
 
 fn spawn_tile(
@@ -329,11 +359,11 @@ fn spawn_tile(
     grid.spawn(button_frame(color))
         .insert((
             Node {
-                width: px(122),
+                width: px(TILE),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
-                row_gap: px(3),
-                padding: UiRect::axes(px(6), px(6)),
+                row_gap: px(2),
+                padding: UiRect::axes(px(4), px(4)),
                 border: UiRect::all(px(3)),
                 border_radius: BorderRadius::all(px(10)),
                 ..default()
@@ -342,15 +372,15 @@ fn spawn_tile(
         ))
         .with_children(|tile| {
             let text_color = if unlocked { colors::text() } else { colors::dim() };
-            tile.spawn(label(&exercise.label, fonts.bold(17.0), text_color));
+            tile.spawn(label(&exercise.label, fonts.bold(16.0), text_color));
             if let Kind::Scale { group, .. } = exercise.kind {
-                tile.spawn(label(group_example(group), fonts.text(13.0), colors::dim()));
+                tile.spawn(label(group_example(group), fonts.text(12.0), colors::dim()));
             }
             if !unlocked {
-                tile.spawn(label("locked", fonts.text(13.0), colors::dim()));
+                tile.spawn(label("locked", fonts.text(12.0), colors::dim()));
                 return;
             }
-            spawn_stars(tile, drill.map_or(0, |d| d.stars()), 18.0, icons);
+            spawn_stars(tile, drill.map_or(0, |d| d.stars()), 16.0, icons);
             let detail = match drill {
                 Some(d) if d.bpm > 0 => {
                     let (bpm, target) = tempo_of(d);
@@ -359,11 +389,11 @@ fn spawn_tile(
                 Some(d) if d.plays > 0 => format!("best {:.0}%", d.best_accuracy * 100.0),
                 _ => "new".to_string(),
             };
-            let detail_color = match tier {
-                Some(t) => t.color(),
-                None => colors::dim(),
-            };
-            tile.spawn(label(detail, fonts.text(12.0), detail_color));
+            tile.spawn(label(detail, fonts.text(12.0), colors::dim()));
+            // The tier in words: the border is not the only sign of it.
+            if let Some(tier) = tier {
+                tile.spawn(label(tier.name(), fonts.bold(12.0), colors::text()));
+            }
         })
         .observe(move |_: On<PointerClick>, mut selected: ResMut<SelectedLevel>, mut next: ResMut<NextState<Screen>>| {
             if unlocked {

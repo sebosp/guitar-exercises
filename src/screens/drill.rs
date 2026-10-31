@@ -805,7 +805,7 @@ fn render(
 
 /// The notes on the fretboard: the four of the current shape for the finger drills; for the
 /// scales the whole position, the next notes brighter; for the shifts the next notes. The note
-/// to play is big with a ring, the one played just before is green.
+/// to play is big with a ring, the one played just before is gray.
 fn fretboard_marks(drill: &Drill, note_names: bool) -> Vec<Mark> {
     let steps = &drill.steps;
     let index = drill.index.min(steps.len().saturating_sub(1));
@@ -827,7 +827,7 @@ fn fretboard_marks(drill: &Drill, note_names: bool) -> Vec<Mark> {
             for (i, step) in steps.iter().enumerate().skip(cell).take(4) {
                 let color = colors::FINGERS[step.finger as usize];
                 let mark = if i < drill.index {
-                    Mark::new(step.position, text(step), colors::ok())
+                    Mark::new(step.position, text(step), colors::played())
                 } else {
                     Mark::new(step.position, text(step), color.with_alpha(0.45))
                 };
@@ -844,7 +844,7 @@ fn fretboard_marks(drill: &Drill, note_names: bool) -> Vec<Mark> {
                 put(&mut marks, Mark::new(step.position, text(step), colors::FINGERS[step.finger as usize].with_alpha(0.6)));
             }
             if let Some(previous) = drill.index.checked_sub(1).and_then(|i| steps.get(i)) {
-                put(&mut marks, Mark::new(previous.position, text(previous), colors::ok()));
+                put(&mut marks, Mark::new(previous.position, text(previous), colors::played()));
             }
         }
     }
@@ -901,7 +901,7 @@ fn draw_tab(commands: &mut Commands, tab: Entity, drill: &Drill, fonts: &Fonts) 
                                 BackgroundColor(colors::dim().with_alpha(0.6)),
                             ));
                             if let Some(step) = on_string {
-                                let color = if i < drill.index { colors::ok() } else { colors::FINGERS[step.finger as usize] };
+                                let color = if i < drill.index { colors::dim() } else { colors::FINGERS[step.finger as usize] };
                                 cell.spawn((
                                     Node { padding: UiRect::horizontal(px(3)), ..default() },
                                     BackgroundColor(colors::bg()),

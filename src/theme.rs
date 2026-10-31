@@ -132,6 +132,12 @@ pub fn current() -> Theme {
     Theme::ALL.get(CURRENT.load(Ordering::Relaxed) as usize).copied().unwrap_or_default()
 }
 
+/// A theme with a light background: the marks on it need darker steps.
+pub fn is_light() -> bool {
+    let l = current().palette().bg.to_linear();
+    0.2126 * l.red + 0.7152 * l.green + 0.0722 * l.blue > 0.4
+}
+
 /// White or black, the one that reads best on a background.
 pub fn text_on(background: Color) -> Color {
     let l = background.to_linear();

@@ -148,7 +148,8 @@ pub fn catalog(instrument: &Instrument, scale: Scale) -> Catalog {
         for skip in 0..strings.saturating_sub(1) as u8 {
             let row = Row {
                 section: if skip > MAX_SKIP { Section::Extra } else { Section::Scales },
-                title: format!("{}, {}", scale.name(), skip_name(skip).to_lowercase()),
+                // The scale is named by the picker above the rows, not in the extra ones.
+                title: if skip > MAX_SKIP { format!("{}, {}", scale.name(), skip_name(skip).to_lowercase()) } else { skip_name(skip) },
                 after_previous: skip > 0 && skip <= MAX_SKIP,
                 exercises: SEQUENCES
                     .map(|group| Exercise {

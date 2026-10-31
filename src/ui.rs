@@ -35,7 +35,7 @@ impl Screen {
 }
 
 pub mod colors {
-    use bevy::prelude::Color;
+    use bevy::prelude::{Alpha, Color};
 
     use crate::theme::current;
 
@@ -91,15 +91,22 @@ pub mod colors {
     pub const STRING: Color = Color::srgb(0.85, 0.81, 0.72);
     pub const INLAY: Color = Color::srgb(0.88, 0.85, 0.78);
 
-    /// Open, index, middle, ring and pinky, the same in every theme: the categorical palette of claudralingo (yellow, aqua,
-    /// orange, blue), neighbors apart for the color blind; the numbers are always written too.
+    /// Open, index, middle, ring and pinky, the same in every theme: yellow, aqua, violet and
+    /// deep blue, every pair apart for the color blind (OKLab delta E 8.4 at worst under protan,
+    /// 17 at worst for normal vision) on the dark and the light surfaces; the numbers are always
+    /// written on them too.
     pub const FINGERS: [Color; 5] = [
         Color::srgb(0.55, 0.55, 0.60),
-        Color::srgb(0.79, 0.52, 0.0),
-        Color::srgb(0.10, 0.62, 0.44),
-        Color::srgb(0.85, 0.35, 0.15),
-        Color::srgb(0.22, 0.53, 0.90),
+        Color::srgb_u8(0xc9, 0x85, 0x00),
+        Color::srgb_u8(0x19, 0x9e, 0x70),
+        Color::srgb_u8(0x90, 0x85, 0xe9),
+        Color::srgb_u8(0x00, 0x72, 0xb2),
     ];
+
+    /// A note already played on the fretboard and in the tablature: neutral, not a finger color.
+    pub fn played() -> Color {
+        dim().with_alpha(0.7)
+    }
 }
 
 #[derive(Resource, Clone)]
@@ -264,13 +271,14 @@ fn apply_theme(
     next.set(*screen.get());
 }
 
-/// Smaller windows (phones) scale the whole interface down: the screens are laid out for about
-/// 1150x800 logical pixels.
+/// Narrower windows (phones) scale the interface down a little, by the width only: the screens
+/// are laid out for about 1150 logical pixels across, scroll down, and wrap their rows; under 75%
+/// the text would be too small to read on a phone held sideways.
 fn scale_to_window(windows: Query<&Window, Changed<Window>>, mut scale: ResMut<UiScale>) {
     let Some(window) = windows.iter().next() else {
         return;
     };
-    let fit = (window.height() / 800.0).min(window.width() / 1150.0).clamp(0.6, 1.0);
+    let fit = (window.width() / 1150.0).clamp(0.75, 1.0);
     if (scale.0 - fit).abs() > 0.01 {
         scale.0 = fit;
     }
