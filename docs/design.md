@@ -26,7 +26,13 @@ note to play and how the practice goes, readable from there. The look comes from
 - Left aligned. Panels are rounded 10 px, buttons and tiles 6 px, chips are pills.
 - The menu is a setlist: the tuning drawn as the strings, then rows with hairlines, each with
   where the player is.
-- The drill reads top to bottom as it is used: the note to play, big, and how the round goes;
-  the fretboard; then the tablature, the staff and the tuner.
+- The drill reads top to bottom as it is used: the shape and the order of the fingers; the
+  metronome with the time signature and the beats; the note to play, big, the counters in
+  columns of a fixed width, and the guide of the note sounding (the finger, sharp or flat);
+  then the tablature on paper, the main view, where a tap plays a note; then the staff and the
+  tuner, which reads against the note to play. No fretboard in the drill: the eyes are on the
+  instrument, the tablature is read in a glance.
+- A change of tempo is a pill in the metronome panel for eight seconds after the round starts,
+  in the colors of ok and bad at low alpha; no permanent sentence about the misses.
 - Plain sentences, no `A · B · C` strings; no explanations of what the players learn by
   playing (the stars, the tiers).

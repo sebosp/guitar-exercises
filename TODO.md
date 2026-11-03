@@ -23,6 +23,10 @@ yet or not verified, the rest are suggestions.
       browser (Web Audio, scheduled ahead) and on Android (cpal AAudio output).
 - [ ] The scale fingerings with real hands, the wide ones of the harmonic minor modes; the repeated
       notes of the sequences (1 2, 2 3) heard as two plucks by the microphone.
+- [ ] Since the tablature became the main view of the drills (2026-11-03): a tap on a note of the
+      tablature on a phone (the cells are 40 px), the pitch guide ("Index finger, a bit sharp, a
+      little lower") with a real instrument and a fretless, the tuner reading against the note to
+      play, the tempo pill after a slower round.
 - [ ] The timing check of the drills with real playing: the tolerance (20% of a slot, 60 to 120 ms)
       and the 80% goal, with the microphone delay and with taps.
 

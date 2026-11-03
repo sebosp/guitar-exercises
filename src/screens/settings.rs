@@ -218,7 +218,8 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>) {
                 |s| s.mic_gate = s.mic_gate.saturating_sub(1),
                 |s| s.mic_gate += 1,
             );
-            row(list, "Tuner, to the strings", fonts).with_children(|r| crate::tuner::spawn_tuner(r, fonts, true));
+            row(list, "Tuner, to the strings", fonts)
+                .with_children(|r| crate::tuner::spawn_tuner(r, fonts, crate::tuner::Against::Strings));
 
             list.spawn(label("Games", fonts.display(crate::ui::size::TITLE), colors::accent()));
             stepper(list, "Hint after", fonts, |s| format!("{:.0} s", s.hint_delay), |s| s.hint_delay -= 1.0, |s| s.hint_delay += 1.0);

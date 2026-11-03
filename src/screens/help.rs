@@ -41,7 +41,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>) {
     let sections: [(&str, String); 7] = [
         (
             "Playing",
-            "Play the note on the instrument, or tap it on the fretboard. The microphone listens when it is on in the settings; a pickup or an audio interface hears best. A pause shows where the next note is and with which finger.".to_string(),
+            "Play the note on the instrument, or tap it on the tablature. The microphone listens when it is on in the settings; a pickup or an audio interface hears best. While a note sounds, the drill says which finger plays it and whether it is sharp or flat. A pause names the next note and the finger. The fingers keep their colors everywhere:".to_string(),
         ),
         (
             "Stars",
@@ -77,6 +77,9 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>) {
                         column.spawn(Node { flex_direction: FlexDirection::Column, row_gap: px(4), ..default() }).with_children(|s| {
                             s.spawn(label(title, fonts.display(size::TITLE), colors::accent()));
                             s.spawn(label(text, fonts.text(size::LEAD), colors::text()));
+                            if title == "Playing" {
+                                crate::diagram::spawn_finger_legend(s, fonts);
+                            }
                         });
                     }
                 },

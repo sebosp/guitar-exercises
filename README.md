@@ -2,7 +2,7 @@
 
 Finger drills and note reading for the guitar and the bass, made with [Bevy](https://bevyengine.org)
 0.20. It listens to the instrument through the microphone to check what is played, or the notes can
-be tapped on the fretboard on the screen. It runs on Linux, Windows, macOS, Android and in the
+be tapped on the screen. It runs on Linux, Windows, macOS, Android and in the
 browser: <https://sebosp.github.io/guitar-exercises/>.
 
 ## The games
@@ -10,8 +10,8 @@ browser: <https://sebosp.github.io/guitar-exercises/>.
 ### Finger drills
 
 The four fingers of the fretting hand (1 index, 2 middle, 3 ring, 4 pinky) in every order, up the
-strings, one fret higher, and back down in the reverse order. The tablature shows the notes coming,
-the fretboard the four notes of the current shape with the finger numbers and colors.
+strings, one fret higher, and back down in the reverse order. The tablature, the main view, shows
+the notes coming in the colors of the fingers; a tap on one plays it without a microphone.
 
 The levels are grouped by hand shape, from the easiest:
 
@@ -30,9 +30,9 @@ Each group has the 6 orders of the fingers that are not rotations of each other 
 3-4-1-2 and 4-1-2-3 loop into the same pattern), 1-2-3-4 and 4-3-2-1 first. A small diagram shows
 each shape: the frets, and a dot of the finger's color on each one played (the fingers have the
 same colors everywhere, in every theme). The accuracy and the speed (notes per minute) are recorded. A pause
-longer than the hint delay names the finger, the fret and the string, and the note pulses. Next to
-the tablature the current note is on the staff with its name, and a tuner shows what the
-microphone hears.
+longer than the hint delay names the finger, the fret and the string. While a note sounds, the
+drill names the finger and says how far sharp or flat the note is; under the tablature the
+current note is on the staff with its name, and a tuner shows the microphone against it.
 
 With the metronome on (the default), each drill has its own tempo and a target tempo, 60 and 100
 BPM at first, both changed with - and + in the drill, with 1 to 4 notes per beat. A round is clean
@@ -88,7 +88,7 @@ Guitar Pro files (GP3, GP4, GP5, GP6 `.gpx`, GP7 and later `.gp`, read with the 
 crate), dropped on the window, opened with the dialog (the desktops and the browser), or copied to
 the `songs` folder of the saves (the way in on Android). A song is played a section at a time: its
 markers, or a few bars at a time, and the whole song; the track is chosen when the file has
-several. The tablature, the fretboard and the staff show the notes of the score; a chord shows its
+several. The tablature and the staff show the notes of the score; a chord shows its
 highest note and any of its notes is right. The speed is a percent of the tempo of the score, from
 60% up to the target (100%, or more to play it faster than written), with the same rules as the
 tempo of the drills, the notes checked against the rhythm of the score.

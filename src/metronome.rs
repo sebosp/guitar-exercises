@@ -13,6 +13,8 @@ pub const BEATS_PER_BAR: u64 = 4;
 pub struct Metronome {
     /// Ticking.
     pub on: bool,
+    /// A round is being played: the clicks stop at the end of a round, until the next one.
+    pub running: bool,
     pub bpm: u32,
     /// Clicks out loud; off for the screenshots.
     pub sound: bool,
@@ -24,7 +26,7 @@ pub struct Metronome {
 
 impl Default for Metronome {
     fn default() -> Self {
-        Metronome { on: false, bpm: crate::tempo::START_BPM, sound: true, start: 0.0, generation: 0 }
+        Metronome { on: false, running: true, bpm: crate::tempo::START_BPM, sound: true, start: 0.0, generation: 0 }
     }
 }
 
@@ -36,7 +38,13 @@ impl Metronome {
     /// Starts again from the first beat of a bar, now.
     pub fn restart(&mut self, now: f64) {
         self.start = now;
+        self.running = true;
         self.generation = self.generation.wrapping_add(1);
+    }
+
+    /// Ticking and in a round: the beats on the screen and the clicks.
+    pub fn ticking(&self) -> bool {
+        self.on && self.running
     }
 
     /// The beat at a real time, from 0.
@@ -65,7 +73,7 @@ pub struct PlayNote {
 }
 
 fn drive(metronome: Res<Metronome>, mut speaker: ResMut<Speaker>, time: Res<Time<Real>>, mut notes: MessageReader<PlayNote>) {
-    let audible = metronome.on && metronome.sound;
+    let audible = metronome.ticking() && metronome.sound;
     let notes: Vec<PlayNote> = notes.read().copied().filter(|_| metronome.sound).collect();
     if (audible || !notes.is_empty()) && speaker.0.is_none() {
         speaker.0 = Some(output::Output::start());
@@ -468,10 +476,16 @@ mod tests {
 
     #[test]
     fn beats() {
-        let mut m = Metronome { bpm: 120, ..default() };
+        let mut m = Metronome { bpm: 120, on: true, ..default() };
         m.restart(10.0);
         assert_eq!(m.beat_at(9.0), 0);
         assert_eq!(m.beat_at(10.2), 0);
         assert_eq!(m.beat_at(11.6), 3);
+        // The end of a round stops the clicks, the next round starts them again.
+        assert!(m.ticking());
+        m.running = false;
+        assert!(!m.ticking());
+        m.restart(20.0);
+        assert!(m.ticking());
     }
 }
