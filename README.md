@@ -2,7 +2,7 @@
 
 Finger drills and note reading for the guitar and the bass, made with [Bevy](https://bevyengine.org)
 0.20. It listens to the instrument through the microphone to check what is played, or the notes can
-be tapped on the fretboard on the screen. It runs on Linux, Windows, macOS, Android and in the
+be tapped on the screen. It runs on Linux, Windows, macOS, Android and in the
 browser: <https://sebosp.github.io/guitar-exercises/>.
 
 ## The games
@@ -10,8 +10,8 @@ browser: <https://sebosp.github.io/guitar-exercises/>.
 ### Finger drills
 
 The four fingers of the fretting hand (1 index, 2 middle, 3 ring, 4 pinky) in every order, up the
-strings, one fret higher, and back down in the reverse order. The tablature shows the notes coming,
-the fretboard the four notes of the current shape with the finger numbers and colors.
+strings, one fret higher, and back down in the reverse order. The tablature, the main view, shows
+the notes coming in the colors of the fingers; a tap on one plays it without a microphone.
 
 The levels are grouped by hand shape, from the easiest:
 
@@ -26,10 +26,72 @@ The levels are grouped by hand shape, from the easiest:
 | 7     | Wide span                      | 5 7 9 10, higher on the neck where the frets are close |
 | 8     | Index anchor, skip two strings | index on a string, the others three strings higher     |
 
-Each group has the 24 orders of the fingers, 1-2-3-4 and 4-3-2-1 first, then the orders with the
-smallest jumps between fingers. 90% accuracy completes a level and opens the next order; three
-orders done open the next group. The accuracy and the speed (notes per minute) are recorded. A pause
-longer than the hint delay names the finger, the fret and the string, and the note pulses.
+Each group has the 6 orders of the fingers that are not rotations of each other (1-2-3-4, 2-3-4-1,
+3-4-1-2 and 4-1-2-3 loop into the same pattern), 1-2-3-4 and 4-3-2-1 first. A small diagram shows
+each shape: the frets, and a dot of the finger's color on each one played (the fingers have the
+same colors everywhere, in every theme). The accuracy and the speed (notes per minute) are recorded. A pause
+longer than the hint delay names the finger, the fret and the string. While a note sounds, the
+drill names the finger and says how far sharp or flat the note is; under the tablature the
+current note is on the staff with its name, and a tuner shows the microphone against it.
+
+With the metronome on (the default), each drill has its own tempo and a target tempo, 60 and 100
+BPM at first, both changed with - and + in the drill, with 1 to 4 notes per beat. A round is clean
+when 90% of the notes are right and 80% are in time: one slot after the previous note, near the
+player's usual place in the slot (a steady delay of the microphone is fine, drifting from the
+clicks is not). After a clean round the tempo goes up 5 BPM, up to the target; a clean round at the
+target completes the lesson, and the target can be raised. After a round under the goal the tempo
+stays, after a second one in a row it goes down 5 BPM. The clicks are short bursts of noise, without
+a pitch for the microphone to hear as a note.
+
+### Scales
+
+A scale chosen on the page (the root, the family: major, harmonic minor, melodic minor or
+pentatonic, and the mode: Dorian, Phrygian dominant, Lydian augmented...) played three notes per
+string (two for the pentatonics) from its root on the lowest string, the fingers of the position
+shown. Each row has a run (1 2 3 4 5...) and the sequences in groups of 2 to 6 notes (1 2, 2 3,
+3 4... then 1 2 3, 2 3 4...), up and back down (6 5 4, 5 4 3...). The rows play the position on
+adjacent strings, then skipping 1 string, then 2 strings (the low E, D and B, then the A, G and
+high e). Each scale and mode keeps its own progress.
+
+### Stretches
+
+Growing gaps: the four fingers 2 frets apart on one string. Growing shifts: one finger per fret
+moving up the neck by jumps that grow (fret 1, 3, 6...), back down on the next string.
+
+The scales have their own page (from the menu, or the drills page): the runs and sequences, and
+the notes of the scale in every order, like the fingers: windows of 2, 3 or 4 notes played as
+2-1 (2 1, 3 2, 4 3...), 1-3-2 (1 3 2, 2 4 3...), 1-3-2-4 and the 23 orders of 4 notes.
+
+### Statistics and help
+
+The statistics, the help and the settings have their buttons on top of every screen. As in
+claudralingo: the streak of days with the daily goal of minutes met (10 by default, the
+minutes counted between the notes played), today, the notes a minute and the accuracy of the last
+30 days, the calendars of two months, the rounds by type, then every drill and note. The help
+opens on the first start, from the menu and with F1.
+
+### Stars, tiers and the extra exercises
+
+A round earns a star for 80% of the notes right, two for 90%, three for all of them; a star opens
+the next exercise of the row, three in a row open the next row. The border of a tile is the tier
+of the fastest clean round with the metronome, in notes per minute (the tempo times the notes per
+beat), with the rarity colors of the games: Basic (gray), Medium (green, 160), Advanced (purple,
+240), Legendary (orange, 360). Two buttons: practice the weakest exercise (the fewest stars, then
+the lowest accuracy), unlock a level at random.
+
+The extra exercises appear at 30 stars: the scales skipping 3 strings or more (more than four
+strings apart), the wider gaps, the bigger shifts.
+
+### Songs
+
+Guitar Pro files (GP3, GP4, GP5, GP6 `.gpx`, GP7 and later `.gp`, read with the `guitarpro`
+crate), dropped on the window, opened with the dialog (the desktops and the browser), or copied to
+the `songs` folder of the saves (the way in on Android). A song is played a section at a time: its
+markers, or a few bars at a time, and the whole song; the track is chosen when the file has
+several. The tablature and the staff show the notes of the score; a chord shows its
+highest note and any of its notes is right. The speed is a percent of the tempo of the score, from
+60% up to the target (100%, or more to play it faster than written), with the same rules as the
+tempo of the drills, the notes checked against the rhythm of the score.
 
 ### Learn notes (staff to fretboard)
 
@@ -52,17 +114,34 @@ The mnemonics, from the bottom:
 
 ### Find them all
 
-A note on the staff: tap every place it is on the fretboard. The notes are the ones learned in
-"Learn notes" (the first five at least), the ones with mistakes or slow answers more often. A pause
-shows the letters of the staff, then the places left one by one.
+Three levels, the letters of the lines and the spaces always next to the staff:
+
+1. The shapes, a tutorial: the same note on the next string (5 frets back, 4 to the B string),
+   the octave two strings and two frets up (three across the B string), three strings up and
+   three frets down, twelve frets up the string, then every C together. The shapes come from the
+   tuning; the notes are linked by lines on the fretboard and played out loud, and the first time
+   each one is tapped before the next page. It opens the first time and stays reachable.
+2. Every octave: a letter, all its octaves on the staff, every place of all of them.
+3. One octave, after 5 notes found in every octave: a note on the staff, every place of it. The
+   notes are the ones learned in "Learn notes" (the first five at least), the ones with mistakes
+   or slow answers more often.
 
 ### Settings and statistics
 
-The instrument (guitar 6 to 8 strings, bass 4 to 6), the tuning (standard, drop, half step down),
-the frets (12 by default, up to 24), left-handed, the microphone with its noise gate and a tuner to
-check it, the hint delay, the drill length, the note names in the drills, the sharps and flats, the
+The theme (dark, light, Catppuccin Mocha and Latte, Tokyo Night, Storm and Day, Gruvbox, Nord,
+Dracula), the instrument (guitar 6 to 8 strings, bass 4 to 6), the tuning (standard, drop, half step down,
+or each string a semitone up or down, a 5-string bass with its low string in A for one), the frets
+(12 by default, up to 24), left-handed, the microphone with its noise gate and a tuner to the open
+strings, the hint delay, the drill length, the note names in the drills, the sharps and flats, the
 right answers that clear a note. The statistics show every drill played and every note with its
 accuracy, its time to answer and the hints.
+
+The window is scaled to fit its size (a big screen or the full screen shows everything bigger, a
+phone not under 75%), and zoomed over that with Ctrl (Cmd on macOS) and the mouse wheel, a pinch
+of the trackpad or of two fingers on a touch screen, Ctrl+= Ctrl+- Ctrl+0 or the buttons of the
+settings: to read it from the instrument a few steps away. F11 (or Cmd+Ctrl+F on macOS) toggles
+the full screen; in the browser F11 and Ctrl are the browser's. A setting changed on a screen
+keeps its scroll.
 
 The settings and the progress are saved on the device: `~/.config/guitar-exercises/` on Linux,
 `~/Library/Application Support/guitar-exercises/` on macOS, `%APPDATA%\guitar-exercises\` on
@@ -73,7 +152,7 @@ kept per instrument and number of strings (`guitar-6`, `bass-4`...).
 
 The samples of the default input are decimated to about 12 kHz and their pitch is found with YIN;
 a pitch held for about 50 ms is a note, a new pluck of the same note counts again. Every note from
-B0 (the low string of a 5-string bass) up is heard. A clip-on pickup or a plugged-in audio
+A0 (the low string of a 5-string bass tuned a whole tone down) up is heard. A clip-on pickup or a plugged-in audio
 interface works best; with a microphone, turn up the noise gate in a noisy room.
 
 - Desktop: the default input device of the system (cpal: ALSA, CoreAudio, WASAPI). On macOS the
@@ -119,5 +198,6 @@ See [TODO.md](TODO.md).
 ## Licenses
 
 The code is under the Apache License 2.0. The fonts are under the SIL Open Font License 1.1: Fira
-Sans (Mozilla, the Bevy feathers copy) and Noto Music (Google, the clefs, sharps and flats), see
+Sans (Mozilla, the Bevy feathers copy), Barlow Condensed (the Barlow Project Authors, the titles
+and the numbers) and Noto Music (Google, the clefs, sharps and flats), see
 `assets/fonts`.

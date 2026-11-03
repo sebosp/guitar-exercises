@@ -11,17 +11,41 @@ yet or not verified, the rest are suggestions.
       dialog and that cpal's AAudio input starts after it is granted.
 - [ ] Web: check the microphone in Firefox, Chrome and Safari (the audio context starts suspended
       until a click) and on a phone browser.
+- [ ] Since the scales page, the zoom and the full screen (2026-10-31): the macOS build (Cmd zoom,
+      Cmd+Ctrl+F; only built by the GitHub workflow, no macOS SDK on the desktops), the web page in a
+      real browser (built with trunk, headless Firefox does not draw the canvas), the two-finger
+      pinch on an Android phone.
 - [ ] macOS: an `.app` bundle with `NSMicrophoneUsageDescription` in its `Info.plist`, the bare
       binary only works from the Terminal.
 - [ ] Windows: an icon and a manifest for the executable.
+- [ ] The metronome through a speaker with the microphone on: that the clicks (noise bursts) are
+      never heard as notes and do not break the onsets of a ringing note; the clicks in the
+      browser (Web Audio, scheduled ahead) and on Android (cpal AAudio output).
+- [ ] The scale fingerings with real hands, the wide ones of the harmonic minor modes; the repeated
+      notes of the sequences (1 2, 2 3) heard as two plucks by the microphone.
+- [ ] Since the tablature became the main view of the drills (2026-11-03): a tap on a note of the
+      tablature on a phone (the cells are 40 px), the pitch guide ("Index finger, a bit sharp, a
+      little lower") with a real instrument and a fretless, the tuner reading against the note to
+      play, the tempo pill after a slower round.
+- [ ] The timing check of the drills with real playing: the tolerance (20% of a slot, 60 to 120 ms)
+      and the 80% goal, with the microphone delay and with taps.
+
+## Songs
+
+- [ ] Choose any range of bars, not only the sections.
+- [ ] The repeats and the endings of the score, the tempo changes inside a section, the fingering
+      of the file when it has one, a play-along sound of the score.
+- [ ] An open dialog on Android (the songs folder only for now); the drop of a file in a real
+      browser, not tested yet.
 
 ## Drills
 
-- [ ] A metronome (needs the `bevy_audio` feature): a target tempo per level, the speed goal raised
-      little by little, the notes checked against the beat (early, late).
+- [ ] The metronome: show each note early or late against the beat, a count-in bar, accents per
+      group of notes per beat.
 - [ ] Positions up the neck: the same level at frets 5, 7, 9, 12, the spider walk all the way up and
-      back.
-- [ ] More shapes: three fingers per string (scales), the pinky anchor, legato (hammer-ons and
+      back; the scales from each degree (the 7 positions of three notes per string).
+- [ ] The scales: the box (CAGED) fingerings, intervals (thirds, fourths), the arpeggios.
+- [ ] More shapes: the pinky anchor, legato (hammer-ons and
       pull-offs: one pluck, several notes), string skipping with every finger.
 - [ ] Alternate picking: down and up strokes shown in the tablature.
 - [ ] A free mode: pick the fingers, the frets and the strings.
@@ -41,11 +65,11 @@ yet or not verified, the rest are suggestions.
 
 ## Interface
 
-- [ ] A light theme and larger text options; the colors of the fingers are already color blind safe.
+- [ ] Larger text options; the colors of the fingers are already color blind safe.
 - [ ] A keyboard and gamepad way to tap the fretboard.
 - [ ] Animations: the notes sliding in the tablature, confetti when a level is done.
-- [ ] A tuner screen with a needle (the settings have a text one).
-- [ ] Custom tunings (any note per string), the capo.
+- [ ] A tuner screen of its own (the settings and the drills have one).
+- [ ] The capo.
 - [ ] A history graph of the accuracy and the speed per day in the statistics.
 - [ ] Export and import of the progress (a JSON file), and sync between devices.
 

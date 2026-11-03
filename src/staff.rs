@@ -45,6 +45,8 @@ pub enum Letters {
 pub struct StaffDrawing {
     /// The written note.
     pub note: Option<Spelled>,
+    /// The other written notes beside it: the other octaves.
+    pub more: Vec<Spelled>,
     pub color: Option<Color>,
     pub letters: Letters,
 }
@@ -56,7 +58,7 @@ fn y_of(position: i32) -> f32 {
 pub fn spawn_staff(parent: &mut ChildSpawnerCommands, clef: Clef) {
     parent.spawn((
         Node { width: px(WIDTH), height: px(y_of(BOTTOM) + PAD), border_radius: BorderRadius::all(px(8)), flex_shrink: 0.0, ..default() },
-        BackgroundColor(colors::PAPER),
+        BackgroundColor(colors::paper()),
         StaffView { clef },
         Pickable::IGNORE,
     ));
@@ -96,50 +98,61 @@ pub fn draw_staff(commands: &mut Commands, staff: (Entity, &StaffView), drawing:
     commands.entity(entity).despawn_children();
     commands.entity(entity).with_children(|s| {
         for l in 0..5 {
-            s.spawn(line(LINES_LEFT, y_of(2 * l), LINES_RIGHT - LINES_LEFT, 1.5, colors::INK));
+            s.spawn(line(LINES_LEFT, y_of(2 * l), LINES_RIGHT - LINES_LEFT, 1.5, colors::ink()));
         }
         // The clefs sit with their baseline on the bottom line.
-        s.spawn(glyph(clef.glyph(), LINES_LEFT + 4.0, y_of(0), MUSIC_SIZE, fonts.music(MUSIC_SIZE), colors::INK));
+        s.spawn(glyph(clef.glyph(), LINES_LEFT + 4.0, y_of(0), MUSIC_SIZE, fonts.music(MUSIC_SIZE), colors::ink()));
         if drawing.letters != Letters::None {
             spawn_letters(s, clef, drawing, fonts);
         }
         let Some(note) = drawing.note else {
             return;
         };
-        let position = staff_position(clef, note);
-        let color = drawing.color.unwrap_or(colors::INK);
-        // The ledger lines, below or above the staff.
-        let ledgers: Vec<i32> = if position < 0 {
-            (position..0).filter(|p| p % 2 == 0).collect()
-        } else if position > 8 {
-            (9..=position).filter(|p| p % 2 == 0).collect()
-        } else {
-            vec![]
-        };
-        for p in ledgers {
-            s.spawn(line(NOTE_X - 8.0, y_of(p), 38.0, 1.5, colors::INK));
-        }
-        // A whole note: a tilted ring.
-        let (w, h) = (22.0, 15.0);
-        s.spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: px(NOTE_X),
-                top: px(y_of(position) - h / 2.0),
-                width: px(w),
-                height: px(h),
-                border: UiRect::axes(px(4.5), px(2.5)),
-                border_radius: BorderRadius::MAX,
-                ..default()
-            },
-            BorderColor::all(color),
-            UiTransform { rotation: Rot2::degrees(-25.0), ..default() },
-            Pickable::IGNORE,
-        ));
-        if let Some(accidental) = note.accidental_glyph() {
-            s.spawn(glyph(accidental, NOTE_X - 22.0, y_of(position), MUSIC_SIZE, fonts.music(MUSIC_SIZE), color));
+        let color = drawing.color.unwrap_or(colors::ink());
+        // The note, and the other octaves beside it, centered on the place of one note.
+        let notes: Vec<Spelled> = std::iter::once(note).chain(drawing.more.iter().copied()).collect();
+        let spacing = 40.0;
+        let first_x = NOTE_X - (notes.len() - 1) as f32 * spacing / 2.0;
+        for (k, note) in notes.into_iter().enumerate() {
+            spawn_note(s, clef, note, first_x + k as f32 * spacing, color, fonts);
         }
     });
+}
+
+/// A whole note on the staff with its ledger lines and its accidental.
+fn spawn_note(s: &mut ChildSpawnerCommands, clef: Clef, note: Spelled, x: f32, color: Color, fonts: &Fonts) {
+    let position = staff_position(clef, note);
+    // The ledger lines, below or above the staff.
+    let ledgers: Vec<i32> = if position < 0 {
+        (position..0).filter(|p| p % 2 == 0).collect()
+    } else if position > 8 {
+        (9..=position).filter(|p| p % 2 == 0).collect()
+    } else {
+        vec![]
+    };
+    for p in ledgers {
+        s.spawn(line(x - 8.0, y_of(p), 38.0, 1.5, colors::ink()));
+    }
+    // A whole note: a tilted ring.
+    let (w, h) = (22.0, 15.0);
+    s.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            left: px(x),
+            top: px(y_of(position) - h / 2.0),
+            width: px(w),
+            height: px(h),
+            border: UiRect::axes(px(4.5), px(2.5)),
+            border_radius: BorderRadius::MAX,
+            ..default()
+        },
+        BorderColor::all(color),
+        UiTransform { rotation: Rot2::degrees(-25.0), ..default() },
+        Pickable::IGNORE,
+    ));
+    if let Some(accidental) = note.accidental_glyph() {
+        s.spawn(glyph(accidental, x - 22.0, y_of(position), MUSIC_SIZE, fonts.music(MUSIC_SIZE), color));
+    }
 }
 
 /// The letters of the lines and the spaces right of the staff, the note's letter in color.
@@ -158,7 +171,7 @@ fn spawn_letters(s: &mut ChildSpawnerCommands, clef: Clef, drawing: &StaffDrawin
             continue;
         }
         let letter = LETTERS[(bottom_letter as i32 + p).rem_euclid(7) as usize];
-        let color = if note_position == Some(p) { colors::BAD } else { colors::REVEAL };
+        let color = if note_position == Some(p) { colors::bad() } else { colors::reveal() };
         // The lines in one column, the spaces in the next, with a tick to their line or space.
         let x = if on_line { LINES_RIGHT + 8.0 } else { LINES_RIGHT + 30.0 };
         s.spawn((

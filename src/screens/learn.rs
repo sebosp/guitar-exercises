@@ -118,7 +118,7 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>, pro
         wrong_taps: vec![],
         misses: 0,
         message: String::new(),
-        message_color: colors::TEXT,
+        message_color: colors::text(),
         dirty: true,
     });
     commands.spawn(screen_root(Screen::Learn)).with_children(|root| {
@@ -134,10 +134,10 @@ fn spawn(mut commands: Commands, fonts: Res<Fonts>, settings: Res<Settings>, pro
         })
         .with_children(|body| {
             spawn_note_header(body, clef, |info| {
-                info.spawn((label("", fonts.bold(34.0), colors::TEXT), NameText));
-                info.spawn((label("", fonts.text(17.0), colors::REVEAL), HintText));
-                info.spawn((label("", fonts.bold(18.0), colors::TEXT), MessageText));
-                info.spawn((label("", fonts.text(15.0), colors::DIM), ProgressText));
+                info.spawn((label("", fonts.bold(34.0), colors::text()), NameText));
+                info.spawn((label("", fonts.text(17.0), colors::reveal()), HintText));
+                info.spawn((label("", fonts.bold(18.0), colors::text()), MessageText));
+                info.spawn((label("", fonts.text(15.0), colors::dim()), ProgressText));
             });
             body.spawn((
                 Node {
@@ -178,7 +178,7 @@ fn answer(
                 learn.wrong_taps.push(tap);
             }
             learn.message = format!("That is {}. Try again.", midi_name(midi));
-            learn.message_color = colors::BAD;
+            learn.message_color = colors::bad();
             if matches!(learn.question, Question::Ask(_)) && !learn.missed {
                 learn.missed = true;
                 learn.scheduler.answer(index, false);
@@ -193,7 +193,7 @@ fn answer(
             continue;
         }
         let seconds = now - learn.asked_at;
-        learn.message_color = colors::OK;
+        learn.message_color = colors::ok();
         match learn.question {
             Question::Introduce(_) => {
                 learn.message = format!("Yes, that is {}.", note.full_name());
@@ -277,15 +277,15 @@ fn render(
     *expected = Expected { midi: Some(note.midi()), position: places.first().copied() };
 
     let letters = if introducing || learn.hint >= 1 || showing { Letters::All } else { Letters::None };
-    let color = if showing { Some(colors::OK) } else { None };
+    let color = if showing { Some(colors::ok()) } else { None };
     if let Ok(staff) = staffs.single() {
-        draw_staff(&mut commands, staff, &StaffDrawing { note: Some(written), color, letters }, &fonts);
+        draw_staff(&mut commands, staff, &StaffDrawing { note: Some(written), more: vec![], color, letters }, &fonts);
     }
     if let Ok(layer) = layers.single() {
         let reveal = introducing || showing || learn.hint >= 3;
         let mut marks: Vec<Mark> = Vec::new();
         if reveal {
-            let fill = if showing { colors::OK } else { colors::REVEAL };
+            let fill = if showing { colors::ok() } else { colors::reveal() };
             marks.extend(places.iter().map(|&p| {
                 let mark = Mark::new(p, note.name(), fill);
                 if learn.hint >= 3 && !showing { mark.pulse() } else { mark }
@@ -293,7 +293,7 @@ fn render(
         }
         for &tap in &learn.wrong_taps {
             let name = Spelled::from_midi(learn.instrument.midi_at(tap), note.accidental == crate::music::Accidental::Flat).name();
-            marks.push(Mark::new(tap, name, colors::BAD));
+            marks.push(Mark::new(tap, name, colors::bad()));
         }
         set_marks(&mut commands, layer, &marks, &fonts);
     }
@@ -328,7 +328,7 @@ fn render(
     let total = learn.scheduler.order.len();
     let progress_text = match learn.scheduler.new_note() {
         Some(new) => format!(
-            "{} of {} notes learned · {} right in a row on {} ({} needed)",
+            "{} of {} notes learned. {} right in a row on {}, {} needed.",
             learn.scheduler.learned,
             total,
             learn.scheduler.streak,
@@ -348,8 +348,8 @@ fn render(
         let new = learn.scheduler.new_note();
         commands.entity(row).with_children(|row| {
             for (i, n) in learn.scheduler.order[..shown].iter().enumerate() {
-                let bg = if Some(i) == new { colors::SELECTED } else { colors::PANEL };
-                let border = if i == current && showing { colors::ACCENT } else { Color::NONE };
+                let bg = if Some(i) == new { colors::selected() } else { colors::panel() };
+                let border = if i == current && showing { colors::accent() } else { Color::NONE };
                 row.spawn((
                     Node {
                         padding: UiRect::axes(px(7), px(2)),
@@ -359,7 +359,7 @@ fn render(
                     },
                     BackgroundColor(bg),
                     BorderColor::all(border),
-                    children![label(n.full_name(), fonts.text(14.0), colors::TEXT)],
+                    children![label(n.full_name(), fonts.text(14.0), colors::text())],
                 ));
             }
         });

@@ -185,19 +185,34 @@ impl TuningPreset {
         }
     }
 
-    pub fn apply(self, mut open: Vec<i32>) -> Vec<i32> {
+    /// The semitones of each string from the standard tuning, the lowest string first.
+    pub fn offsets(self, strings: usize) -> Vec<i8> {
+        let mut offsets = vec![0; strings];
         match self {
             TuningPreset::Standard => {}
             TuningPreset::Drop => {
-                if let Some(low) = open.first_mut() {
-                    *low -= 2;
+                if let Some(low) = offsets.first_mut() {
+                    *low = -2;
                 }
             }
-            TuningPreset::HalfStepDown => open.iter_mut().for_each(|s| *s -= 1),
+            TuningPreset::HalfStepDown => offsets.iter_mut().for_each(|o| *o = -1),
         }
-        open
+        offsets
+    }
+
+    /// The preset of some offsets, `None` for a custom tuning.
+    pub fn matching(offsets: &[i8]) -> Option<TuningPreset> {
+        TuningPreset::ALL.into_iter().find(|p| p.offsets(offsets.len()) == offsets)
+    }
+
+    /// The name of a tuning: its preset, or `Custom`.
+    pub fn describe(offsets: &[i8]) -> &'static str {
+        TuningPreset::matching(offsets).map_or("Custom", TuningPreset::name)
     }
 }
+
+/// The lowest and the highest offset of a string from its standard tuning, in semitones.
+pub const RETUNE_RANGE: std::ops::RangeInclusive<i8> = -12..=12;
 
 /// A place on the fretboard. String 0 is the lowest one; on the screen and in the tablature the
 /// highest string is on top.
@@ -218,7 +233,17 @@ pub struct Instrument {
 
 impl Instrument {
     pub fn new(kind: InstrumentKind, strings: usize, tuning: TuningPreset, frets: u8) -> Self {
-        Instrument { kind, open: tuning.apply(kind.standard_tuning(strings)), frets }
+        Instrument::tuned(kind, strings, &tuning.offsets(strings), frets)
+    }
+
+    /// An instrument with each string `offsets` semitones from the standard tuning, the lowest
+    /// string first; the missing offsets are 0.
+    pub fn tuned(kind: InstrumentKind, strings: usize, offsets: &[i8], frets: u8) -> Self {
+        let mut open = kind.standard_tuning(strings);
+        for (string, offset) in open.iter_mut().zip(offsets) {
+            *string += *offset as i32;
+        }
+        Instrument { kind, open, frets }
     }
 
     pub fn strings(&self) -> usize {
@@ -416,6 +441,13 @@ mod tests {
         assert_eq!(drop.open[0], 38);
         let bass = Instrument::new(InstrumentKind::Bass, 5, TuningPreset::Standard, 12);
         assert_eq!(bass.open, [23, 28, 33, 38, 43]);
+        // The low B of a 5-string bass down to A0.
+        let a_bass = Instrument::tuned(InstrumentKind::Bass, 5, &[-2, 0, 0, 0, 0], 12);
+        assert_eq!(a_bass.open, [21, 28, 33, 38, 43]);
+        assert_eq!(a_bass.string_label(0), "A");
+        assert_eq!(TuningPreset::matching(&[-2, 0, 0, 0, 0]), Some(TuningPreset::Drop));
+        assert_eq!(TuningPreset::describe(&[0, 0, 0, 1]), "Custom");
+        assert_eq!(TuningPreset::describe(&[-1; 6]), "Half step down");
     }
 
     #[test]
