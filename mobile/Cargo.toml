@@ -1,7 +1,7 @@
 [package]
 name = "guitar_exercises_mobile"
 # cargo-apk needs a version.
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 description = "Guitar Exercises on Android"
 publish = false
