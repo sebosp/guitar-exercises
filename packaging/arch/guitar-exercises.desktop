@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Guitar Exercises
+GenericName=Guitar Practice
+Comment=Finger drills, scales, songs and note reading for the guitar and the bass
+Exec=guitar-exercises
+Icon=guitar-exercises
+Terminal=false
+Categories=Education;Music;Game;
+Keywords=guitar;bass;practice;drills;scales;tablature;metronome;
+StartupWMClass=guitar-exercises

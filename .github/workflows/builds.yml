@@ -42,7 +42,7 @@ jobs:
         run: |
           mkdir -p guitar-exercises-linux-x86_64
           strip -o guitar-exercises-linux-x86_64/guitar-exercises target/release/guitar-exercises
-          cp README.md LICENSE assets/web/favicon.svg guitar-exercises-linux-x86_64/
+          cp README.md LICENSE packaging/arch/guitar-exercises.desktop assets/web/favicon.svg guitar-exercises-linux-x86_64/
           cp -r assets/fonts guitar-exercises-linux-x86_64/font-licenses && rm guitar-exercises-linux-x86_64/font-licenses/*.ttf
           tar -czf guitar-exercises-linux-x86_64.tar.gz guitar-exercises-linux-x86_64
       - uses: actions/upload-artifact@v4
