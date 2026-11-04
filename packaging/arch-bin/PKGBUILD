@@ -1,0 +1,26 @@
+# Maintainer: Seb Ospina <kraige at gmail dot com>
+# The binary package: the Linux build of a GitHub release, nothing compiled. Update pkgver and the
+# sha256sums (updpkgsums) for each release `v<pkgver>`.
+pkgname=guitar-exercises-bin
+pkgver=0.3.1
+pkgrel=1
+pkgdesc="Finger drills and note reading for the guitar and the bass, in Bevy, checked by the microphone"
+arch=('x86_64')
+url="https://github.com/sebosp/guitar-exercises"
+license=('Apache-2.0')
+depends=('alsa-lib' 'gcc-libs' 'glibc' 'libxkbcommon' 'systemd-libs' 'vulkan-icd-loader' 'wayland')
+provides=('guitar-exercises')
+conflicts=('guitar-exercises')
+options=('!strip' '!debug')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/guitar-exercises-linux-x86_64.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+  cd guitar-exercises-linux-x86_64
+  install -Dm755 guitar-exercises "$pkgdir/usr/bin/guitar-exercises"
+  install -Dm644 guitar-exercises.desktop "$pkgdir/usr/share/applications/guitar-exercises.desktop"
+  install -Dm644 favicon.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/guitar-exercises.svg"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/guitar-exercises/README.md"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  cp -r font-licenses "$pkgdir/usr/share/licenses/$pkgname/fonts"
+}
